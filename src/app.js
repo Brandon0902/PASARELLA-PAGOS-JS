@@ -2,16 +2,20 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const { connect } = require('../config/database');
+const { connect } = require('./config/database');
 const indexRouter = require('./routes/index'); 
-
 const app = express();
 
-app.use(logger('dev'));
+// 'combined' es el formato de logging más completo, adecuado para producción.
+// Incluye información detallada como: método HTTP, URL, código de estado, tamaño de la respuesta,
+// dirección IP del cliente, agente de usuario (navegador) y la URL de referencia.
+// Ejemplo de salida:
+// ::1 - - [09/Sep/2024:10:00:00 +0000] "GET /api/conekta HTTP/1.1" 200 150 "https://example.com" "Mozilla/5.0"
+
+app.use(logger('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.use('/', indexRouter); 
