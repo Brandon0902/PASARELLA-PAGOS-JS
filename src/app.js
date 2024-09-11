@@ -12,7 +12,14 @@ const app = express();
 // Ejemplo de salida:
 // ::1 - - [09/Sep/2024:10:00:00 +0000] "GET /api/conekta HTTP/1.1" 200 150 "https://example.com" "Mozilla/5.0"
 
-app.use(logger('combined'));
+// 'dev' es un formato de logging más ligero y adecuado para desarrollo.
+// Muestra la solicitud HTTP, el código de estado y el tiempo de respuesta en milisegundos.
+// Es más conciso y fácil de leer mientras se trabaja en desarrollo.
+// Ejemplo de salida:
+// GET /api/conekta 200 12.345 ms
+
+const logFormat = process.env.LOG_FORMAT;
+app.use(logger(logFormat));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
