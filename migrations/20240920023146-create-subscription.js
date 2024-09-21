@@ -13,26 +13,6 @@ module.exports = {
           allowNull: false,
           type: Sequelize.INTEGER
         },
-        plane_id: {
-          allowNull: false,
-          type: Sequelize.INTEGER,
-          references: {
-            model: 'planes',
-            key: 'id'
-          },
-          onUpdate: 'cascade',
-          onDelete: 'cascade'
-        },
-        subscription_type_id: {
-          allowNull: false,
-          type: Sequelize.INTEGER,
-          references: {
-            model: 'subscription_types',
-            key: 'id'
-          },
-          onUpdate: 'cascade',
-          onDelete: 'cascade'
-        },
         payment_method_id: {
           allowNull: false,
           type: Sequelize.INTEGER,

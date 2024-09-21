@@ -78,20 +78,6 @@ const Subscription = db.sequelize.define(
     'subscriptions',
     {
         userId: DataTypes.INTEGER,
-        planeId: {
-            type: DataTypes.INTEGER,
-            references: {
-                model: 'planes',
-                key: 'id'
-            }
-        },
-        subscriptionTypeId: {
-            type: DataTypes.INTEGER,
-            references: {
-                model: 'subscription_types',
-                key: 'id'
-            }
-        },
         paymentMethodId: {
             type: DataTypes.INTEGER,
             references: {
@@ -117,6 +103,20 @@ const SubscriptionPeriod = db.sequelize.define(
     'subscription_periods',
     {
         subscriptionId: DataTypes.INTEGER,
+        planeId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'planes',
+                key: 'id'
+            }
+        },
+        subscriptionTypeId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'subscription_types',
+                key: 'id'
+            }
+        },
         price: DataTypes.FLOAT,
         referenceId: DataTypes.STRING,
         errorDetails: DataTypes.JSON,
