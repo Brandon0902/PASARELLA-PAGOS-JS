@@ -4,6 +4,7 @@ const SubscriptionRepository = require('../repositories/subscriptionRepository')
 const SubscriptionPeriodRespository = require('../repositories/subscriptionPeriodRepository')
 const SubscriptionPriceRepository = require('../repositories/subscriptionPriceRepository')
 const UserPaymentPlatformRepository = require('../repositories/userPaymentPlatformRepository')
+const Mapper = require('../mappers/subscriptionMapper')
 const { sequelize } = require('../config/database')
 
 const getSubscriptionType = async (id) => {
@@ -26,59 +27,20 @@ const getPaymentStrategy = (id) => {
     }
 }
 
-const buildSubscription = (plane, subsType, userId, paymentData, hasTrialDays) => {
-    return {
-        userId: userId,
-        planeId: plane.id,
-        subscriptionTypeId: subsType.id,
-        paymentMethodId: 1,
-        paymentPlatformId: paymentData.id,
-        hasTrialDays: hasTrialDays,
-        state: hasTrialDays ? 'ACTIVE' : 'PENDING'
-    }
-}
-
-const calculateEndDate = (subscriptioType) => {
-    switch(subscriptioType) {
-        case 'MONTHLY': return new Date()
-        case 'YEARLY': return new Date()
-    }
-
-    return ''
-}
-
-const buildPeriod = (subscription, prices, paymentResult) => {
-    return {
-        subscriptionId: subscription.id,
-        price: prices.price,
-        referenceId: paymentResult.subscriptionId,
-        state: 'ACTIVE',
-        startDate: new Date(),
-        endDate: calculateEndDate(subscription.subscriptionType.code)
-    }
-}
-
-const buildUserPaymentPlatform = (paymentPlatformId, userId, paymentData) => {
-    return {
-        userId,
-        paymentPlatformId,
-        referenceId: paymentData.customerId,
-        state: 'ACTIVE'
-    }
-}
-
 const saveSubscription = async (plane, subsType, price, userId, result, hasTrialDays) => {
     const t = await sequelize.transaction()
 
     try {
         
-        const subscription = buildSubscription(plane, subsType, userId, result, hasTrialDays)
+        const subscription = Mapper.toSubscriptionEntity(userId, result, hasTrialDays)
         const subscriptionCreated = await SubscriptionRepository.create(subscription, t)
         subscriptionCreated.subscriptionType = subsType
         
-        await SubscriptionPeriodRespository.create(buildPeriod(subscriptionCreated, price, result), t)
+        await SubscriptionPeriodRespository.create(
+            Mapper.toSubscriptionPeriodEntity(subscriptionCreated, price, result, hasTrialDays, plane), t
+        )
 
-        await UserPaymentPlatformRepository.create(buildUserPaymentPlatform(1, userId, result), t)
+        await UserPaymentPlatformRepository.create(Mapper.toUserPaymentPlatformEntity(1, userId, result), t)
 
         await t.commit()
 
@@ -112,9 +74,6 @@ const create = async (data) => {
     const result = strategy.createSubscription(data, hasTrialDays)
 
     const subscription = await saveSubscription(plane, subsType, price, user.userId, result, hasTrialDays)
-
-    // Send email
-    // sendEmail()
 
     return subscription
 }
