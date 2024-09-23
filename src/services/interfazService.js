@@ -1,5 +1,9 @@
 const conektaDevCenter = require('@api/conekta-dev-center');
 
+
+conektaDevCenter.api_key = process.env.CONEKTA_API_KEY;
+conektaDevCenter.api_version = '2.1.0';
+
 function processCustomerData(customerData, planId, paymentType) {
     const conektaSuscription = {
         email: customerData.email, 
@@ -7,12 +11,12 @@ function processCustomerData(customerData, planId, paymentType) {
         phone: customerData.phone,
         payment_sources: [         
             {
-                type: paymentType || 'card', 
+                type: paymentType || 'card',
                 token_id: customerData.token_id  
             }
         ],
         subscription: {            
-            plan_id: planId, 
+            plan_id: planId,
         }
     };
 
