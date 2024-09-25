@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
-const db = require('../config/database')
+const db = require('../config/database');
+const { platform } = require('cordova');
 
 const Plane = db.sequelize.define(
     'planes',
@@ -127,6 +128,53 @@ const SubscriptionPeriod = db.sequelize.define(
     { underscored: true }
 );
 
+const PlanePaymentPlatform = db.sequelize.define(
+    'plane_payment_platforms',
+    {
+        planeId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'planes',
+                key: 'id'
+            }
+        },
+        subscriptionTypeId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'sucription_types',
+                key: 'id'
+            }
+        },
+        platformPaymentId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'payment_platforms',
+                key: 'id'
+            }
+        },
+        referendId:{
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        state: {
+            type:DataTypes.CHAR,
+            allowNull: true,
+        },
+        createdAt: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW
+        }
+    },
+    {
+        timestamps: true,
+        underscored: true
+    }
+);
+
 Plane.hasMany(Benefit);
 Plane.hasMany(SubscriptionPrice);
 SubscriptionPrice.belongsTo(SubscriptionType);
@@ -141,5 +189,6 @@ module.exports = {
     PaymentMethod,
     UserPaymentPlatform,
     Subscription,
-    SubscriptionPeriod
+    SubscriptionPeriod,
+    PlanePaymentPlatform
 };
