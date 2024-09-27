@@ -15,6 +15,11 @@ const findAll = async () => {
     return result
 }
 
+const findById = async (id) => {
+    return await Plane.findByPk(id)
+}
+
 module.exports = {
-    findAll
+    findAll,
+    findById
 }
