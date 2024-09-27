@@ -93,6 +93,7 @@ const Subscription = db.sequelize.define(
             }
         },
         hasTrialDays: DataTypes.BOOLEAN,
+        referenceId: DataTypes.STRING,
         state: DataTypes.CHAR,
         endDate: DataTypes.DATE
     },

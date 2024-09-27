@@ -45,7 +45,6 @@ module.exports = {
         type: Sequelize.FLOAT
       },
       reference_id: {
-        allowNull: false,
         type: 'VARCHAR(50)'
       },
       error_details: {

@@ -37,6 +37,10 @@ module.exports = {
           allowNull: false,
           type: Sequelize.BOOLEAN
         },
+        reference_id: {
+          allowNull: false,
+          type: 'VARCHAR(50)'
+        },
         state: {
           allowNull: false,
           type: 'VARCHAR(10)'

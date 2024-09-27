@@ -37,7 +37,7 @@ const saveSubscription = async (plane, subsType, price, userId, result, hasTrial
         subscriptionCreated.subscriptionType = subsType
         
         await SubscriptionPeriodRespository.create(
-            Mapper.toSubscriptionPeriodEntity(subscriptionCreated, price, result, hasTrialDays, plane), t
+            Mapper.toSubscriptionPeriodEntity(subscriptionCreated, price, hasTrialDays, plane), t
         )
 
         await UserPaymentPlatformRepository.create(Mapper.toUserPaymentPlatformEntity(1, userId, result), t)
