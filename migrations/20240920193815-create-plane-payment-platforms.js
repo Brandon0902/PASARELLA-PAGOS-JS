@@ -37,7 +37,7 @@ module.exports = {
         allowNull: true
       },
       state: {
-        type: Sequelize.CHAR,
+        type: 'VARCHAR(1O)',
         allowNull: false
       },
       created_at: {

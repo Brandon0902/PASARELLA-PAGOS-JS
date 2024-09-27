@@ -160,7 +160,7 @@ const PlanePaymentPlatform = db.sequelize.define(
             allowNull: true,
         },
         state: {
-            type:DataTypes.CHAR,
+            type:DataTypes.STRING,
             allowNull: true,
         },
         createdAt: {
