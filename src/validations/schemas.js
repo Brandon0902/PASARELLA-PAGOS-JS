@@ -6,6 +6,15 @@ const subscription = Joi.object({
     token_id: Joi.string().required()
 });
 
+const userAuth = Joi.object({
+    id: Joi.number().required(),
+    email: Joi.string().required(),
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    phone: Joi.string().required()
+});
+
 module.exports = {
-    subscription
+    subscription,
+    userAuth
 }

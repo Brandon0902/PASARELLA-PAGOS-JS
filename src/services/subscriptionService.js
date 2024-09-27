@@ -67,13 +67,13 @@ const create = async (data) => {
     const price = await getPlanePrice(plane.id, subsType.id)
 
     // Value to create trial period
-    const hasTrialDays = await applyFreeTrial(user.userId)
+    const hasTrialDays = await applyFreeTrial(user.id)
 
     // Get payment platform strategy
     const strategy = getPaymentStrategy() // PaymentPlatformService.createCharge(data)
     const result = strategy.createSubscription(data, hasTrialDays)
 
-    const subscription = await saveSubscription(plane, subsType, price, user.userId, result, hasTrialDays)
+    const subscription = await saveSubscription(plane, subsType, price, user.id, result, hasTrialDays)
 
     return subscription
 }
