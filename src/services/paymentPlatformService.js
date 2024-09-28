@@ -1,5 +1,5 @@
 const { PaymentPlatform, PlanePaymentPlatform } = require('../models/plane');
-const conektaService = require('./conektaService');
+const conektaService = require('./interfazService');
 
 async function processPaymentPlatforms(customerData, paymentType) {
     const { planeId, subscriptionTypeId } = customerData; 
@@ -25,7 +25,7 @@ async function processPaymentPlatforms(customerData, paymentType) {
             if (paymentPlatformId === 1) {
                 console.log('Procesando Conekta con referenceId:', referenceId);
                 
-                await conektaService.createSubscription(customerData, referenceId, paymentType);
+                await conektaService.proccessCustomerData(customerData, referenceId, paymentType);
 
                 console.log('Integración con Conekta completada.');
             }
