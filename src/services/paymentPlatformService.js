@@ -25,7 +25,7 @@ async function processPaymentPlatforms(customerData, paymentType) {
             if (paymentPlatformId === 1) {
                 console.log('Procesando Conekta con referenceId:', referenceId);
                 
-                await conektaService.proccessCustomerData(customerData, referenceId, paymentType);
+                await conektaService.processCustomerData(customerData, referenceId, paymentType);
 
                 console.log('Integración con Conekta completada.');
             }
