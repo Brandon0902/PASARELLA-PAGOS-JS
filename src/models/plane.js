@@ -143,11 +143,11 @@ const PlanePaymentPlatform = db.sequelize.define(
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: 'sucription_types',
+                model: 'subscription_types',
                 key: 'id'
             }
         },
-        platformPaymentId: {
+        paymentPlatformId: { 
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
@@ -155,22 +155,18 @@ const PlanePaymentPlatform = db.sequelize.define(
                 key: 'id'
             }
         },
-        referendId:{
+        referenceId: {
             type: DataTypes.STRING,
-            allowNull: true,
+            allowNull: true
         },
         state: {
-            type:DataTypes.STRING,
-            allowNull: true,
-        },
-        createdAt: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            defaultValue: DataTypes.NOW
+            type: DataTypes.STRING,
+            allowNull: false
         }
     },
+
     {
-        timestamps: true,
+        updatedAt: false,
         underscored: true
     }
 );
@@ -178,6 +174,7 @@ const PlanePaymentPlatform = db.sequelize.define(
 Plane.hasMany(Benefit);
 Plane.hasMany(SubscriptionPrice);
 SubscriptionPrice.belongsTo(SubscriptionType);
+PlanePaymentPlatform.belongsTo(PaymentPlatform);
 
 
 module.exports = {
