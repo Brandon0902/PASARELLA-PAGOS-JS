@@ -24,7 +24,7 @@ module.exports = {
           key: 'id'
         }
       },
-      platform_payment_id: {
+      payment_platform_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
