@@ -1,4 +1,4 @@
-const { PaymentPlatform, PlanePaymentPlatform } = require('../models');
+const { PaymentPlatform, PlanePaymentPlatform } = require('../models/plane');
 const conektaService = require('./interfazService');
 
 async function processPaymentPlatforms(customerData, paymentType) {

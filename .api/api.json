@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "conekta-dev-center",
+      "source": "@conekta-dev-center/v2.1.0#3xqd520wrm19fxqce",
+      "integrity": "sha512-04OioHeUrfrxi2fYR0duyO/cw3Gqpvn2u42i//dlMbvVvNBiLnIe1W45YYksbjtzYq7hy2OAe67Nxi/pKykV9g==",
+      "installerVersion": "6.1.2"
+    }
+  ]
+}

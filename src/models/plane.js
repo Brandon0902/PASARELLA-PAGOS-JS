@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const db = require('../config/database');
-const { platform } = require('cordova');
 
 const Plane = db.sequelize.define(
     'planes',

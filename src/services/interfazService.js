@@ -1,6 +1,5 @@
 const conektaDevCenter = require('@api/conekta-dev-center');
 
-
 conektaDevCenter.api_key = process.env.CONEKTA_API_KEY;
 conektaDevCenter.api_version = '2.1.0';
 
@@ -23,7 +22,11 @@ function processCustomerData(customerData, planId, paymentType) {
     return conektaDevCenter.createCustomer(conektaSuscription, { 'Accept-Language': 'es' })
     .then(({ data }) => {
         console.log('Cliente creado exitosamente:', data);
-        return data; 
+        return {
+            customer_id: data.customer_id,  
+            subscription_id: data.id,      
+            platform_id: 1  
+        };
     })
     .catch(err => {
         console.error('Error al crear cliente:', err);

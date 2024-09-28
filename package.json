@@ -6,6 +6,7 @@
     "start": "nodemon src/app.js"
   },
   "dependencies": {
+    "@api/conekta-dev-center": "file:.api/apis/conekta-dev-center",
     "conekta": "^6.0.3",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
