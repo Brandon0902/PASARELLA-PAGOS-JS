@@ -26,6 +26,20 @@ const create = async (req, res, next) => {
     }
 }
 
+const cancel = async (req, res, next) => {
+    try {
+        const user = req.user
+        const id = parseInt(req.params.id)
+        const result = await SubscriptionService.cancel({id, user})
+        if(result)
+            return res.status(200).send(result)
+    } catch(err) {
+        console.log(err)
+        next(err)
+    }
+}
+
 module.exports = {
-    create
+    create,
+    cancel
 }

@@ -8,6 +8,7 @@ const { checkAuthToken } = require('../middlewares/auth')
 router.get('/planes', PlaneController.getAll)
 
 router.post('/subscriptions', checkAuthToken, SubscriptionController.create)
+router.post('/subscriptions/:id/cancel', checkAuthToken, SubscriptionController.cancel)
 
 router.get('/', (req, res, next) => {
   res.json({ message: 'Hello World A Payments Legalian' });

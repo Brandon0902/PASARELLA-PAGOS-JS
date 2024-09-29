@@ -45,8 +45,26 @@ const toUserPaymentPlatformEntity = (paymentPlatformId, userId, paymentData) => 
     }
 }
 
+const toCancelSubscriptionEntity = () => {
+    return {
+        state: 'CANCELED',
+        endDate: moment(),
+        updatedAt: moment()
+    }
+}
+
+const toEndedSubscriptionPeriodEntity = () => {
+    return {
+        state: 'ENDED',
+        endDate: moment(),
+        updatedAt: moment()
+    }
+}
+
 module.exports = {
     toSubscriptionEntity,
     toSubscriptionPeriodEntity,
-    toUserPaymentPlatformEntity
+    toUserPaymentPlatformEntity,
+    toCancelSubscriptionEntity,
+    toEndedSubscriptionPeriodEntity
 }

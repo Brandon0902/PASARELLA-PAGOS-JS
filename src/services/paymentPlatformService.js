@@ -1,6 +1,16 @@
 const { PaymentPlatform, PlanePaymentPlatform } = require('../models/plane');
 const conektaService = require('./conektaService');
 
+const getStrategy = (paymentPlatformName) => {
+    
+    const strategies = {
+        'CONEKTA': conektaService,
+        'STRIPE': { createSubscription: async () => {}, cancelSubscription: async () => {}}
+    }
+
+    return strategies[paymentPlatformName]
+}
+
 async function processPaymentPlatforms(customerData, paymentType) {
     const { planeId, subscriptionTypeId } = customerData; 
 
@@ -21,21 +31,20 @@ async function processPaymentPlatforms(customerData, paymentType) {
         for (let platform of paymentPlatforms) {
             const paymentPlatformId = platform.paymentPlatformId; 
             const referenceId = platform.referenceId;
+            const paymentPlatform = platform.payment_platform
 
-            if (paymentPlatformId === 1) {
-                console.log('Procesando Conekta con referenceId:', referenceId);
+            console.log('Procesando Conekta con referenceId:', referenceId);
+            const paymentStrategy = getStrategy(paymentPlatform.name)
+            // Llamar a createSubscription y capturar los valores
+            const { customerId, subscriptionId } = await paymentStrategy.createSubscription(customerData, referenceId, paymentType);
 
-                // Llamar a createSubscription y capturar los valores
-                const { customerId, subscriptionId } = await conektaService.createSubscription(customerData, referenceId, paymentType);
+            console.log('Integración con Conekta completada.');
 
-                console.log('Integración con Conekta completada.');
-
-                return {
-                    customerId,
-                    subscriptionId,
-                    id: paymentPlatformId
-                };
-            }
+            return {
+                customerId,
+                subscriptionId,
+                id: paymentPlatformId
+            };
         }
 
     } catch (error) {
@@ -44,4 +53,22 @@ async function processPaymentPlatforms(customerData, paymentType) {
     }
 }
 
-module.exports = { processPaymentPlatforms };
+const cancelSubscription = async (subscription) => {
+    try {
+
+        const referenceData = subscription.referenceData
+
+        const paymentStrategy = getStrategy(subscription.paymentPlatformName)
+
+        const result = await paymentStrategy.cancelSusbcription(referenceData)
+        return result !== null
+    } catch(err) {
+        console.log(err)
+        return false
+    }
+}
+
+module.exports = { 
+    processPaymentPlatforms,
+    cancelSubscription
+};

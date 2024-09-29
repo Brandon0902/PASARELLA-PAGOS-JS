@@ -1,11 +1,13 @@
 const PlaneService = require('../services/planeService')
 const SubscriptionTypeService = require('../services/subscriptionTypeService')
+const PaymentPlatformService = require('../services/paymentPlatformService')
 const SubscriptionRepository = require('../repositories/subscriptionRepository')
 const SubscriptionPeriodRespository = require('../repositories/subscriptionPeriodRepository')
 const SubscriptionPriceRepository = require('../repositories/subscriptionPriceRepository')
 const UserPaymentPlatformRepository = require('../repositories/userPaymentPlatformRepository')
 const Mapper = require('../mappers/subscriptionMapper')
 const { sequelize } = require('../config/database')
+const { NotFoundError, InternalServerError } = require('../handlers/errors')
 
 const getSubscriptionType = async (id) => {
     return await SubscriptionTypeService.getById(id)
@@ -13,18 +15,6 @@ const getSubscriptionType = async (id) => {
 
 const getPlanePrice = async (plane, subsType) => {
     return await SubscriptionPriceRepository.findByPlaneAndSubscriptionType(plane, subsType)
-}
-
-const getPaymentStrategy = (id) => {
-    return {
-        createSubscription: (data, hasTrialDays) => {
-            return {
-                id: 1,
-                customerId: 'cus_4124124124124',
-                subscriptionId: 'subs_4124214124'
-            }
-        }
-    }
 }
 
 const saveSubscription = async (plane, subsType, price, userId, result, hasTrialDays) => {
@@ -60,6 +50,62 @@ const applyFreeTrial = async (userId) => {
     return await getByUserId(userId) === null
 }
 
+const getSubscription = async (id, userId) => {
+    const subscription = await SubscriptionRepository.findByIdAndUserId(id, userId)
+
+    if (subscription === null)
+        throw new NotFoundError('subscription not found')
+
+    const paymentPlatformId = subscription.paymentPlatformId
+    const userPayPlatform = await UserPaymentPlatformRepository.findOne({ userId, paymentPlatformId })
+
+    if (userPayPlatform === null)
+        throw new NotFoundError('user payment platform not found')
+
+    const subscriptionData = {
+        id: subscription.id,
+        paymentPlatformId: userPayPlatform.payment_platform.id,
+        paymentPlatformName: userPayPlatform.payment_platform.name,
+        referenceData: {
+            customerId: userPayPlatform.referenceId,
+            subscriptionId: subscription.referenceId
+        }
+    }
+
+    return subscriptionData
+}
+
+const cancelSubscription = async (subscription) => {
+
+    try {
+
+        const result = await sequelize.transaction(async t => {
+
+            const { id } = subscription
+
+            const subscriptionData = Mapper.toCancelSubscriptionEntity()
+            const [ _, [updated]] = await SubscriptionRepository.update(id, subscriptionData, t)
+
+            const periodData = Mapper.toEndedSubscriptionPeriodEntity()
+            await SubscriptionPeriodRespository.update(id, periodData, t)
+
+            // Cancel subscription on payment platform
+            const isCanceled = await PaymentPlatformService.cancelSubscription(subscription)
+
+            if(!isCanceled)
+                throw new InternalServerError('error to trying cancel subscription. Retry later')
+
+            return updated
+        })
+
+        return result
+
+    } catch(err) {
+        console.log(err)
+        throw err
+    }
+}
+
 const create = async (data) => {
     const user = data.user
     const plane = await PlaneService.getById(data.subscriptionRequest.plane_id);
@@ -70,14 +116,31 @@ const create = async (data) => {
     const hasTrialDays = await applyFreeTrial(user.id)
 
     // Get payment platform strategy
-    const strategy = getPaymentStrategy() // PaymentPlatformService.createCharge(data)
-    const result = strategy.createSubscription(data, hasTrialDays)
+    const userData = {
+        email: user.email,
+        name: user.firstName + ' ' + user.lastName,
+        phone: user.phone,
+        token_id: data.subscriptionRequest.token_id,
+        planeId: plane.id,
+        subscriptionTypeId: subsType.id
+    }
+    const result = await PaymentPlatformService.processPaymentPlatforms(userData)
 
-    const subscription = await saveSubscription(plane, subsType, price, user.id, result, hasTrialDays)
+    return await saveSubscription(plane, subsType, price, user.id, result, hasTrialDays)
+}
 
-    return subscription
+const cancel = async (data) => {
+    const { id, user } = data
+
+    // Get subscription by id and user id. Only cancel if user subscription
+
+    const subscription = await getSubscription(id, user.id)
+
+    // Finish subscription and subscription period
+    return await cancelSubscription(subscription)
 }
 
 module.exports = {
-    create
+    create,
+    cancel
 }
