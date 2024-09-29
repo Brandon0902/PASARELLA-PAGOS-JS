@@ -12,7 +12,7 @@ async function createSubscription(customerData, planId, paymentType) {
         plan_id: planId,
         payment_sources: [
             {
-                type: paymentType,
+                type: 'card',
                 token_id: customerData.token_id
             }
         ]
