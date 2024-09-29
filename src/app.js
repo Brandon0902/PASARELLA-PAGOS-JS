@@ -3,6 +3,7 @@ const cookieParser = require('cookie-parser');
 const { errorHandler } = require('./handlers/errors')
 const logger = require('morgan');
 const indexRouter = require('./routes/index'); 
+const webhooksRouter = require('./routes/webhooks');
 const app = express();
 
 // 'combined' es el formato de logging más completo, adecuado para producción.
@@ -25,6 +26,7 @@ app.use(cookieParser());
 
 
 app.use('/', indexRouter);
+app.use('/', webhooksRouter);
 
 app.use(errorHandler); 
 
