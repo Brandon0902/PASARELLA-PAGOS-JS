@@ -33,7 +33,7 @@ async function processPaymentPlatforms(customerData, paymentType) {
                 return {
                     customerId,
                     subscriptionId,
-                    platformId: paymentPlatformId 
+                    id: paymentPlatformId
                 };
             }
         }
