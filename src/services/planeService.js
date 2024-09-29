@@ -1,6 +1,6 @@
 const repository = require('../repositories/planeRepository');
 const { PlanePaymentPlatform, PaymentPlatform } = require('../models/plane')
-const { getSubscriptionType } = require('../services/subscriptionService')
+const SubscriptionTypeService = require('../services/subscriptionTypeService')
 const { NotFoundError } = require('../handlers/errors')
 const moment = require('moment')
 
@@ -18,7 +18,7 @@ const getById = async (id) => {
 }
 
 const validateSubscriptionType = async (id) => {
-    return await getSubscriptionType(id)
+    return await SubscriptionTypeService.getById(id)
 }
 
 const validatePaymentPlatform = async (id) => {
