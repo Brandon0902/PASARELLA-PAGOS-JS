@@ -1,11 +1,12 @@
 const subscriptionSchema = require('../validations/schemas')
 const SubscriptionService = require('../services/subscriptionService')
+const { BadRequestError } = require('../handlers/errors')
 
 const isValid = (data) => {
     const result = subscriptionSchema.subscription.validate(data);
     
     if(result.error)
-        throw new Error(result.error.message)
+        throw new BadRequestError(result.error.message)
     
     return result.error === undefined;
 }

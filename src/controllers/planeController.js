@@ -11,7 +11,7 @@ const isValid = (data) => {
     const result = Schemas.plane.validate(data)
 
     if (result.error)
-        throw new BadRequestError('plane payment platform error')
+        throw new BadRequestError(result.error.message)
 
     return true;
 }

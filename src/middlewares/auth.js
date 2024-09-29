@@ -17,7 +17,6 @@ const getUserData = (token) => {
 const isValid = (data) => {
     const result = Schema.userAuth.validate(data)
 
-    console.log(result)
     return result.error === undefined
 }
 
