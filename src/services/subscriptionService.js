@@ -142,5 +142,6 @@ const cancel = async (data) => {
 
 module.exports = {
     create,
-    cancel
+    cancel,
+    getSubscriptionType
 }

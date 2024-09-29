@@ -14,7 +14,15 @@ const userAuth = Joi.object({
     phone: Joi.string().required()
 });
 
+const plane = Joi.object({
+    plane_id: Joi.number().required(),
+    subscription_type_id: Joi.number().required(),
+    payment_platform_id: Joi.number().required(),
+    reference_id: Joi.string().required()
+});
+
 module.exports = {
     subscription,
-    userAuth
+    userAuth,
+    plane
 }
