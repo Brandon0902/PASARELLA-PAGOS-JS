@@ -24,7 +24,7 @@ module.exports = {
           key: 'id'
         }
       },
-      platform_payment_id: {
+      payment_platform_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
@@ -32,12 +32,12 @@ module.exports = {
           key: 'id'
         }
       },
-      referend_id: {
+      reference_id: {
         type: Sequelize.STRING,
         allowNull: true
       },
       state: {
-        type: 'VARCHAR(1O)',
+        type: 'VARCHAR(10)',
         allowNull: false
       },
       created_at: {
