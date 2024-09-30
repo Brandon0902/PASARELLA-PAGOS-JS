@@ -8,6 +8,7 @@ const UserPaymentPlatformRepository = require('../repositories/userPaymentPlatfo
 const Mapper = require('../mappers/subscriptionMapper')
 const { sequelize } = require('../config/database')
 const { NotFoundError, InternalServerError } = require('../handlers/errors')
+const { Op } = require('sequelize')
 
 const getSubscriptionType = async (id) => {
     return await SubscriptionTypeService.getById(id)
@@ -75,35 +76,41 @@ const getSubscription = async (id, userId) => {
     return subscriptionData
 }
 
-const cancelSubscription = async (subscription) => {
-
+const executeTransaction = async (func, data) => {
     try {
-
+        
         const result = await sequelize.transaction(async t => {
-
-            const { id } = subscription
-
-            const subscriptionData = Mapper.toCancelSubscriptionEntity()
-            const [ _, [updated]] = await SubscriptionRepository.update(id, subscriptionData, t)
-
-            const periodData = Mapper.toEndedSubscriptionPeriodEntity()
-            await SubscriptionPeriodRespository.update(id, periodData, t)
-
-            // Cancel subscription on payment platform
-            const isCanceled = await PaymentPlatformService.cancelSubscription(subscription)
-
-            if(!isCanceled)
-                throw new InternalServerError('error to trying cancel subscription. Retry later')
-
-            return updated
+            return await func(data, t)
         })
-
+    
         return result
 
     } catch(err) {
         console.log(err)
         throw err
     }
+}
+
+const cancelSubscription = async (subscription) => {
+
+    return executeTransaction(async (subscription, t) => {
+
+        const { id } = subscription
+
+        const subscriptionData = Mapper.toCancelSubscriptionEntity()
+        const [ _, [updated]] = await SubscriptionRepository.update(id, subscriptionData, t)
+
+        const periodData = Mapper.toEndedSubscriptionPeriodEntity()
+        await SubscriptionPeriodRespository.update(id, periodData, t)
+
+        // Cancel subscription on payment platform
+        const isCanceled = await PaymentPlatformService.cancelSubscription(subscription)
+
+        if(!isCanceled)
+            throw new InternalServerError('error to trying cancel subscription. Retry later')
+
+        return updated
+    }, subscription)
 }
 
 const create = async (data) => {
@@ -140,8 +147,49 @@ const cancel = async (data) => {
     return await cancelSubscription(subscription)
 }
 
+const getByReferenceId = async (paymentPlatformId, referenceId) => {
+    return await SubscriptionRepository.findOne({ paymentPlatformId, referenceId })
+}
+
+const getPeriodBySubscriptionId = async (id) => {
+    return await SubscriptionPeriodRespository.findOne({
+        subscriptionId: id,
+        state: { [Op.in]: ['ACTIVE', 'PENDING', 'ERROR'] }
+    })
+}
+
+const suspendSubscription = async (subscription) => {
+
+    return executeTransaction(async (subscription, tx) => {
+        
+        const { id } = subscription
+        const data = Mapper.toSubscriptionEntity1(subscription, 'SUSPENDED')
+
+        const updated = SubscriptionRepository.update(id, data, tx)
+
+        const period = await getPeriodBySubscriptionId(id)
+
+        const periodData = Mapper.toSubscriptionPeriodEntity1(
+            period,
+            'ERROR',
+            { error: { ...errors } = subscription}
+        )
+
+        await SubscriptionPeriodRespository.update(period.id, periodData, tx)
+
+        return updated
+
+    }, subscription)
+}
+
+const suspend = async (id, data = null) => {
+    return await suspendSubscription({id, ...data})
+}
+
 module.exports = {
     create,
     cancel,
-    getSubscriptionType
+    suspend,
+    getByUserId,
+    getByReferenceId
 }

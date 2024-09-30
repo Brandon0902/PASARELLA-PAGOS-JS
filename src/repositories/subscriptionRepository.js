@@ -14,6 +14,12 @@ const findByIdAndUserId = async (id, userId) => {
     })
 }
 
+const findOne = async (filters) => {
+    return await Subscription.findOne({
+        where: { ...filters }
+    })
+}
+
 const update = async(id, data, tx) => {
     return await Subscription.update(data, {where: { id: id }, transaction: tx, returning: true})
 }
@@ -22,5 +28,6 @@ module.exports = {
     create,
     findByUserId,
     findByIdAndUserId,
-    update
+    update,
+    findOne
 }

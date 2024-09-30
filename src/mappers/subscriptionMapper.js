@@ -36,12 +36,28 @@ const toSubscriptionPeriodEntity = (subscription, prices, hasTrialDays, plane) =
     }
 }
 
+const toSubscriptionPeriodEntity1 = (subscriptionPeriod, state, errorDetails = null, endDate = null) => {
+    return {
+        state: state || subscriptionPeriod.state,
+        errorDetails,
+        endDate: endDate || subscriptionPeriod.endDate 
+    }
+}
+
 const toUserPaymentPlatformEntity = (paymentPlatformId, userId, paymentData) => {
     return {
         userId,
         paymentPlatformId,
         referenceId: paymentData.customerId,
         state: 'ACTIVE'
+    }
+}
+
+const toSubscriptionEntity1 = (subscription, state, endDate = null) => {
+    return {
+        state: state,
+        endDate: endDate || subscription.endDate,
+        updatedAt: moment()
     }
 }
 
@@ -66,5 +82,7 @@ module.exports = {
     toSubscriptionPeriodEntity,
     toUserPaymentPlatformEntity,
     toCancelSubscriptionEntity,
-    toEndedSubscriptionPeriodEntity
+    toEndedSubscriptionPeriodEntity,
+    toSubscriptionEntity1,
+    toSubscriptionPeriodEntity1
 }
