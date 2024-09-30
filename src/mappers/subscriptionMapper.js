@@ -13,8 +13,9 @@ const toSubscriptionEntity = (userId, paymentData, hasTrialDays) => {
 
 const calculateEndDate = (subscriptionType, hasTrialDays, plane) => {
     
-    if(hasTrialDays)
+    if (hasTrialDays) {
         return moment().add(plane.trialDays, 'day')
+    }
 
     switch(subscriptionType) {
         case 'MONTHLY': return moment().add(1, 'month')

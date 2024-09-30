@@ -3,7 +3,7 @@ const Schema = require('../validations/schemas')
 
 const getUserData = (token) => {
     const payload = decodeJWT(token)
-    if(payload) {
+    if (payload) {
         return {
             id: payload.id,
             email: payload.email,
@@ -23,12 +23,14 @@ const isValid = (data) => {
 const checkAuthToken = (req, res, next) => {
     const token = req.get('Authorization')
 
-    if (!token)
+    if (!token) {
         return res.status(401).send({error: 'unauthorized error'})
+    }
 
     const user = getUserData(token)
-    if (!isValid(user))
+    if (!isValid(user)) {
         return res.status(400).send({error: 'user bad request'})
+    }
 
     req.user = user
 
