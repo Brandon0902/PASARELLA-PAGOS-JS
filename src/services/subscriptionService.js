@@ -54,14 +54,16 @@ const applyFreeTrial = async (userId) => {
 const getSubscription = async (id, userId) => {
     const subscription = await SubscriptionRepository.findByIdAndUserId(id, userId)
 
-    if (subscription === null)
+    if (subscription === null) {
         throw new NotFoundError('subscription not found')
+    }
 
     const paymentPlatformId = subscription.paymentPlatformId
     const userPayPlatform = await UserPaymentPlatformRepository.findOne({ userId, paymentPlatformId })
 
-    if (userPayPlatform === null)
+    if (userPayPlatform === null) {
         throw new NotFoundError('user payment platform not found')
+    }
 
     const subscriptionData = {
         id: subscription.id,
