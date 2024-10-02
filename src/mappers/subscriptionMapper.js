@@ -37,6 +37,18 @@ const toSubscriptionPeriodEntity = (subscription, prices, hasTrialDays, plane) =
     }
 }
 
+const toNextSubscriptionPeriodEntity = (subscription, currentPeriod, subscriptionType) => {
+    return {
+        subscriptionId: subscription.id,
+        planeId: currentPeriod.planeId,
+        subscriptionTypeId: currentPeriod.subscriptionTypeId,
+        price: currentPeriod.price,
+        state: 'ACTIVE',
+        startDate: currentPeriod.endDate,
+        endDate: calculateEndDate(subscriptionType.code, false, currentPeriod.planeId)
+    };
+}
+
 const toSubscriptionPeriodEntity1 = (subscriptionPeriod, state, errorDetails = null, endDate = null) => {
     return {
         state: state || subscriptionPeriod.state,
@@ -85,5 +97,6 @@ module.exports = {
     toCancelSubscriptionEntity,
     toEndedSubscriptionPeriodEntity,
     toSubscriptionEntity1,
-    toSubscriptionPeriodEntity1
+    toSubscriptionPeriodEntity1,
+    toNextSubscriptionPeriodEntity
 }
