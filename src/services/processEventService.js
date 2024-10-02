@@ -1,8 +1,14 @@
 const SubscriptionEventService = require('../services/subscriptionEventService')
 
 const handleSubscriptionPaid = async (paymentPlatform, subscriptionPaidData) => {
-    
-};
+    const { object } = subscriptionPaidData;
+    const event = {
+        data: {
+            subscription_id: object.id
+        }
+    };
+    return await SubscriptionEventService.subscriptionPaid(paymentPlatform, event);
+}
 
 const handleChargeDeclined = async (paymentPlatform, eventData) => {
     
@@ -14,7 +20,7 @@ const handleChargeDeclined = async (paymentPlatform, eventData) => {
         }
     }
     return await SubscriptionEventService.suspendSubscription(paymentPlatform, event)
-};
+}
 
 const handleSubscriptionCanceled = async (paymentPlatform, eventData) => {
     const event = {

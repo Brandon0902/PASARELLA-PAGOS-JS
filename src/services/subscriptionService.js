@@ -54,16 +54,14 @@ const applyFreeTrial = async (userId) => {
 const getSubscription = async (id, userId) => {
     const subscription = await SubscriptionRepository.findByIdAndUserId(id, userId)
 
-    if (subscription === null) {
+    if (subscription === null)
         throw new NotFoundError('subscription not found')
-    }
 
     const paymentPlatformId = subscription.paymentPlatformId
     const userPayPlatform = await UserPaymentPlatformRepository.findOne({ userId, paymentPlatformId })
 
-    if (userPayPlatform === null) {
+    if (userPayPlatform === null)
         throw new NotFoundError('user payment platform not found')
-    }
 
     const subscriptionData = {
         id: subscription.id,
@@ -188,10 +186,45 @@ const suspend = async (id, data = null) => {
     return await suspendSubscription({id, ...data})
 }
 
+const paid = async (paymentPlatformId, referenceId) => {
+    try {
+        const subscription = await getByReferenceId(paymentPlatformId, referenceId);
+
+        const currentPeriod = await getPeriodBySubscriptionId(subscription.id);
+
+        const subscriptionType = await getSubscriptionType(currentPeriod.subscriptionTypeId);
+
+        if (currentPeriod.state === 'PENDING') {
+            await SubscriptionPeriodRespository.update(
+                currentPeriod.id,
+                { state: 'ACTIVE' }
+            );
+        } else if (currentPeriod.state === 'ACTIVE') {
+            await SubscriptionPeriodRespository.update(
+                currentPeriod.id,
+                { state: 'ENDED' }
+            );
+
+            const newPeriod = Mapper.toNextSubscriptionPeriodEntity(
+                subscription,
+                currentPeriod,
+                subscriptionType
+            );
+            await SubscriptionPeriodRespository.create(newPeriod);
+        }
+
+        return subscription;
+    } catch (error) {
+        throw new Error(`Error processing event: ${error.message}`);
+    }
+}
+
+
 module.exports = {
     create,
     cancel,
     suspend,
     getByUserId,
-    getByReferenceId
+    getByReferenceId,
+    paid
 }

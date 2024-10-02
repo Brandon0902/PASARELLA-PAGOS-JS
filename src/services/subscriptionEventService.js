@@ -23,29 +23,34 @@ const getSubscriptionByReferenceId = async (platform, referenceId) => {
 }
 
 const getSubscription = async (paymentPlatform, event) => {
+    const { data } = event;
+    const customerId = data.customer_id;
+    const subscriptionId = data.subscription_id;
+    const platform = await PaymentPlatform.findOne({ where: { name: paymentPlatform } });
 
-    const { data } = event
-    const customerId = data.customer_id
-    const subscriptionId = data.subscription_id
-    const platform = await PaymentPlatform.findOne({ where: {name: paymentPlatform}})
-
-    var subscription = null
-    if(customerId) {
-        subscription = await getSubscriptionByCustomerId(platform, customerId)
+    let subscription = null;
+    if (customerId) {
+        subscription = await getSubscriptionByCustomerId(platform, customerId);
     } else {
-        subscription = await getSubscriptionByReferenceId(platform, subscriptionId)
+        subscription = await getSubscriptionByReferenceId(platform, subscriptionId);
     }
 
-    const { errors } = data
+    if (!subscription) {
+        return null;
+    }
+
+    const { errors } = data;
 
     const subscriptionData = {
         id: subscription.id,
-        user: { id: subscription.userId },
+        userId: subscription.userId,
         endDate: subscription.endDate,
-        errors: { ...errors }
-    }
+        errors: { ...errors },
+        paymentPlatformId: subscription.paymentPlatformId,
+        referenceId: subscription.referenceId
+    };
 
-    return subscriptionData
+    return subscriptionData;
 }
 
 const suspendSubscription = async (paymentPlatform, event) => { 
@@ -56,6 +61,14 @@ const suspendSubscription = async (paymentPlatform, event) => {
         return await SubscriptionService.suspend(subscription.id, subscription)
 }
 
+const subscriptionPaid = async (paymentPlatform, event) => { 
+    const subscription = await getSubscription(paymentPlatform, event);
+
+    if (subscription) {
+        return await SubscriptionService.paid(subscription.paymentPlatformId, subscription.referenceId);
+    } 
+}
+
 const cancelSubscription = async (paymentPlatform, event) => {
 
     const subscription = await getSubscription(paymentPlatform, event)
@@ -64,7 +77,9 @@ const cancelSubscription = async (paymentPlatform, event) => {
         return await SubscriptionService.cancel(subscription)
 }
 
+
 module.exports = {
     suspendSubscription,
-    cancelSubscription
+    cancelSubscription,
+    subscriptionPaid
 }
