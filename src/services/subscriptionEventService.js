@@ -1,6 +1,7 @@
 const { PaymentPlatform } = require('../models/plane')
 const SubscriptionService = require('../services/subscriptionService')
 const UserPaymentPlatformRepository = require('../repositories/userPaymentPlatformRepository')
+const { NotFoundError } = require('../handlers/errors');
 
 const getSubscriptionByCustomerId = async (platform, customerId) => {
 
@@ -26,9 +27,14 @@ const getSubscription = async (paymentPlatform, event) => {
     const { data } = event;
     const customerId = data.customer_id;
     const subscriptionId = data.subscription_id;
+
     const platform = await PaymentPlatform.findOne({ where: { name: paymentPlatform } });
+    if (!platform) {
+        throw new NotFoundError(`Payment platform '${paymentPlatform}' not found`);
+    }
 
     let subscription = null;
+    
     if (customerId) {
         subscription = await getSubscriptionByCustomerId(platform, customerId);
     } else {
@@ -36,7 +42,7 @@ const getSubscription = async (paymentPlatform, event) => {
     }
 
     if (!subscription) {
-        return null;
+        throw new NotFoundError(`Subscription not found for platform '${paymentPlatform}' with reference ID '${subscriptionId}' or customer ID '${customerId}'`);
     }
 
     const { errors } = data;
@@ -47,7 +53,8 @@ const getSubscription = async (paymentPlatform, event) => {
         endDate: subscription.endDate,
         errors: { ...errors },
         paymentPlatformId: subscription.paymentPlatformId,
-        referenceId: subscription.referenceId
+        referenceId: subscription.referenceId,
+        state: subscription.state
     };
 
     return subscriptionData;
@@ -61,11 +68,11 @@ const suspendSubscription = async (paymentPlatform, event) => {
         return await SubscriptionService.suspend(subscription.id, subscription)
 }
 
-const subscriptionPaid = async (paymentPlatform, event) => { 
+const subscriptionPaid = async (paymentPlatform, event) => {  
     const subscription = await getSubscription(paymentPlatform, event);
 
     if (subscription) {
-        return await SubscriptionService.paid(subscription.paymentPlatformId, subscription.referenceId);
+        return await SubscriptionService.paid(subscription);
     } 
 }
 

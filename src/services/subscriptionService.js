@@ -186,9 +186,13 @@ const suspend = async (id, data = null) => {
     return await suspendSubscription({id, ...data})
 }
 
-const paid = async (paymentPlatformId, referenceId) => {
+const paid = async (subscription) => {
     try {
-        const subscription = await getByReferenceId(paymentPlatformId, referenceId);
+        
+        if (subscription.state === 'PENDING') {
+            await SubscriptionRepository.update(subscription.id, { state: 'ACTIVE' });
+            subscription.state = 'ACTIVE';
+        }
 
         const currentPeriod = await getPeriodBySubscriptionId(subscription.id);
 
@@ -214,10 +218,11 @@ const paid = async (paymentPlatformId, referenceId) => {
         }
 
         return subscription;
+
     } catch (error) {
-        throw new Error(`Error processing event: ${error.message}`);
+        throw new InternalServerError(`Error processing subscription: ${error.message}`);
     }
-}
+};
 
 
 module.exports = {
