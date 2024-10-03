@@ -5,6 +5,30 @@ const errorHandler = (err, req, res, next) => {
     })
 }
 
+class NotFoundError extends Error {
+    constructor(message) {
+        super(message)
+        this.status = 404
+    }
+}
+
+class InternalServerError extends Error {
+    constructor(message) {
+        super(message)
+        this.status = 500
+    }
+}
+
+class BadRequestError extends Error {
+    constructor(message) {
+        super(message)
+        this.status = 400
+    }
+}
+
 module.exports = {
-    errorHandler
+    errorHandler,
+    NotFoundError,
+    InternalServerError,
+    BadRequestError
 }

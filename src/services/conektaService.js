@@ -1,5 +1,6 @@
 const axios = require('axios');
 const dotenv = require('dotenv');
+const { conektaClient } = require('../services/httpService')
 
 dotenv.config();
 const CONEKTA_API_KEY = process.env.CONEKTA_API_KEY;
@@ -37,4 +38,11 @@ async function createSubscription(customerData, planId, paymentType) {
     }
 }
 
-module.exports = { createSubscription };
+const cancelSusbcription = async (subscription) => {
+
+    const { customerId } = subscription
+
+    return await conektaClient.post(`/customers/${customerId}/subscription/cancel`)
+}
+
+module.exports = { createSubscription, cancelSusbcription };

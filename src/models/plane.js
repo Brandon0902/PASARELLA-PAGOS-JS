@@ -52,7 +52,8 @@ const PaymentPlatform = db.sequelize.define(
     {
         name: DataTypes.STRING,
         state: DataTypes.CHAR
-    }
+    },
+    { underscored: true, updatedAt: false }
 );
 
 const PaymentMethod = db.sequelize.define(
@@ -175,6 +176,7 @@ Plane.hasMany(Benefit);
 Plane.hasMany(SubscriptionPrice);
 SubscriptionPrice.belongsTo(SubscriptionType);
 PlanePaymentPlatform.belongsTo(PaymentPlatform);
+UserPaymentPlatform.belongsTo(PaymentPlatform);
 
 
 module.exports = {
