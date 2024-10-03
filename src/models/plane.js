@@ -70,6 +70,7 @@ const UserPaymentPlatform = db.sequelize.define(
         userId: DataTypes.INTEGER,
         paymentPlatformId: DataTypes.INTEGER,
         referenceId: DataTypes.STRING,
+        data: DataTypes.JSONB,
         state: DataTypes.CHAR
     },
     { updatedAt: false, underscored: true }
@@ -177,6 +178,8 @@ Plane.hasMany(SubscriptionPrice);
 SubscriptionPrice.belongsTo(SubscriptionType);
 PlanePaymentPlatform.belongsTo(PaymentPlatform);
 UserPaymentPlatform.belongsTo(PaymentPlatform);
+SubscriptionPeriod.belongsTo(Plane)
+Subscription.hasMany(SubscriptionPeriod, { as: 'periods' })
 
 
 module.exports = {

@@ -9,6 +9,7 @@ const Mapper = require('../mappers/subscriptionMapper')
 const { sequelize } = require('../config/database')
 const { NotFoundError, InternalServerError } = require('../handlers/errors')
 const { Op } = require('sequelize')
+const { send } = require('../services/emailService')
 
 const getSubscriptionType = async (id) => {
     return await SubscriptionTypeService.getById(id)
@@ -18,20 +19,21 @@ const getPlanePrice = async (plane, subsType) => {
     return await SubscriptionPriceRepository.findByPlaneAndSubscriptionType(plane, subsType)
 }
 
-const saveSubscription = async (plane, subsType, price, userId, result, hasTrialDays) => {
+const saveSubscription = async (plane, subsType, price, user, result, hasTrialDays) => {
     const t = await sequelize.transaction()
 
     try {
         
-        const subscription = Mapper.toSubscriptionEntity(userId, result, hasTrialDays)
+        const subscription = Mapper.toSubscriptionEntity(user.id, result, hasTrialDays)
         const subscriptionCreated = await SubscriptionRepository.create(subscription, t)
-        subscriptionCreated.subscriptionType = subsType
-        
-        await SubscriptionPeriodRespository.create(
+        const period = await SubscriptionPeriodRespository.create(
             Mapper.toSubscriptionPeriodEntity(subscriptionCreated, price, hasTrialDays, plane), t
         )
 
-        await UserPaymentPlatformRepository.create(Mapper.toUserPaymentPlatformEntity(1, userId, result), t)
+        subscriptionCreated.subscriptionType = subsType
+        subscriptionCreated.lastPeriod = period
+
+        await UserPaymentPlatformRepository.create(Mapper.toUserPaymentPlatformEntity(1, user, result), t)
 
         await t.commit()
 
@@ -135,7 +137,11 @@ const create = async (data) => {
     }
     const result = await PaymentPlatformService.processPaymentPlatforms(userData)
 
-    return await saveSubscription(plane, subsType, price, user.id, result, hasTrialDays)
+    const subscription = await saveSubscription(plane, subsType, price, user, result, hasTrialDays)
+
+    await send(await Mapper.toSubscription(subscription, user))
+
+    return subscription
 }
 
 const cancel = async (data) => {

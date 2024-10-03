@@ -1,6 +1,8 @@
 const { PaymentPlatform } = require('../models/plane')
 const SubscriptionService = require('../services/subscriptionService')
 const UserPaymentPlatformRepository = require('../repositories/userPaymentPlatformRepository')
+const Mapper = require('../mappers/subscriptionMapper')
+const { send } = require('../services/emailService')
 
 const getSubscriptionByCustomerId = async (platform, customerId) => {
 
@@ -22,6 +24,16 @@ const getSubscriptionByReferenceId = async (platform, referenceId) => {
     return await SubscriptionService.getByReferenceId(paymentPlatformId, referenceId)
 }
 
+const getUserPaymentPlatform = async (userId, paymentPlatformId) => {
+    const result = UserPaymentPlatformRepository.findOne({userId, paymentPlatformId})
+
+    if (result === null) {
+        throw new Error('user payment platform not found')
+    }
+
+    return result
+}
+
 const getSubscription = async (paymentPlatform, event) => {
 
     const { data } = event
@@ -36,35 +48,54 @@ const getSubscription = async (paymentPlatform, event) => {
         subscription = await getSubscriptionByReferenceId(platform, subscriptionId)
     }
 
-    const { errors } = data
+    const userData = await getUserPaymentPlatform(subscription.userId, platform.id)
 
-    const subscriptionData = {
-        id: subscription.id,
-        user: { id: subscription.userId },
-        endDate: subscription.endDate,
-        errors: { ...errors }
-    }
+    const user = { id: subscription.userId, email: userData.data.email }
 
-    return subscriptionData
+    return Mapper.toSubscription(subscription, user)
 }
 
 const suspendSubscription = async (paymentPlatform, event) => { 
 
     const subscription = await getSubscription(paymentPlatform, event)
+    subscription.errors = { ...event.data.errors }
 
-    if (subscription)
+    if (subscription) {
         return await SubscriptionService.suspend(subscription.id, subscription)
+    }
 }
 
 const cancelSubscription = async (paymentPlatform, event) => {
 
     const subscription = await getSubscription(paymentPlatform, event)
 
-    if (subscription)
-        return await SubscriptionService.cancel(subscription)
+    if (subscription) {
+        await SubscriptionService.cancel(subscription)
+        await send(subscription)
+    }
+}
+
+const getStrategy = (eventType) => {
+    const strategy = {
+        'CANCEL': execute = async () => cancelSubscription,
+        'SUSPEND': execute = async () => suspendSubscription
+    }
+
+    return strategy[eventType]
+}
+
+const processEvent = async (paymentPlatform, event) => {
+    const strategy = getStrategy(event.type)
+
+    const subscription = await getSubscription(paymentPlatform, event)
+
+    if (subscription) {
+        await strategy.execute(subscription)
+    }
 }
 
 module.exports = {
     suspendSubscription,
-    cancelSubscription
+    cancelSubscription,
+    processEvent
 }
