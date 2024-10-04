@@ -57,11 +57,14 @@ const toSubscriptionPeriodEntity1 = (subscriptionPeriod, state, errorDetails = n
     }
 }
 
-const toUserPaymentPlatformEntity = (paymentPlatformId, userId, paymentData) => {
+const toUserPaymentPlatformEntity = (paymentPlatformId, user, paymentData) => {
     return {
-        userId,
+        userId: user.id,
         paymentPlatformId,
         referenceId: paymentData.customerId,
+        data: {
+            email: user.email
+        },
         state: 'ACTIVE'
     }
 }
@@ -90,6 +93,34 @@ const toEndedSubscriptionPeriodEntity = () => {
     }
 }
 
+const getPeriod = async(subscription) => {
+
+    if (subscription.lastPeriod === undefined) {
+        const result = await subscription.getPeriods()
+        const first = result.filter(item => item.state === 'ACTIVE' || item.state === 'PENDING').pop()
+
+        if (!first) {
+            throw new Error('error to trying current period')
+        }
+
+        return first
+    }
+
+    return subscription.lastPeriod
+}
+
+const toSubscription = async (subscription, user) => {
+    const period = await getPeriod(subscription)
+    const plane = await period.getPlane()
+    
+    return {
+        id: subscription.id,
+        user: user,
+        planeName: plane.name,
+        endDate: moment(period.endDate).format('DD/MM/YYYY')
+    }
+}
+
 module.exports = {
     toSubscriptionEntity,
     toSubscriptionPeriodEntity,
@@ -98,5 +129,6 @@ module.exports = {
     toEndedSubscriptionPeriodEntity,
     toSubscriptionEntity1,
     toSubscriptionPeriodEntity1,
-    toNextSubscriptionPeriodEntity
+    toNextSubscriptionPeriodEntity,
+    toSubscription
 }

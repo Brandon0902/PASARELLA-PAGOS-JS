@@ -14,6 +14,7 @@ const handleChargeDeclined = async (paymentPlatform, eventData) => {
     
     const {failure_code, failure_message} = eventData.data.object
     const event = {
+        type: 'SUSPEND',
         data: {
             customer_id: eventData.data.object.customer_id,
             errors: { failure_code, failure_message }
@@ -24,6 +25,7 @@ const handleChargeDeclined = async (paymentPlatform, eventData) => {
 
 const handleSubscriptionCanceled = async (paymentPlatform, eventData) => {
     const event = {
+        type: 'CANCEL',
         data: {
             subscription_id: eventData.object.id
         }
