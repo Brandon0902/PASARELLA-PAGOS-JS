@@ -1,10 +1,11 @@
 const SubscriptionEventService = require('../services/subscriptionEventService')
 
 const handleSubscriptionPaid = async (paymentPlatform, subscriptionPaidData) => {
-    const { object } = subscriptionPaidData;
+    const { data } = subscriptionPaidData;
     const event = {
+        type: 'PAID',
         data: {
-            subscription_id: object.id
+            subscription_id: data.object.id
         }
     };
     return await SubscriptionEventService.subscriptionPaid(paymentPlatform, event);
@@ -56,14 +57,22 @@ const strategies = {
 };
 
 const executeStrategy = async (eventType, data) => {
-    const strategy = strategies[eventType];
-    if (!strategy) {
-        throw new Error(`Estrategia no encontrada para el evento: ${eventType}`);
+    try {
+
+        console.log(`Process event: ${eventType}`)
+
+        const strategy = strategies[eventType];
+
+        if (!strategy) {
+            throw new Error(`Estrategia no encontrada para el evento: ${eventType}`);
+        }
+    
+        const paymentPlatform = getPaymentPlatform(eventType)
+    
+        return await strategy(paymentPlatform, data);
+    } catch (err) {
+        console.log(err)
     }
-
-    const paymentPlatform = getPaymentPlatform(eventType)
-
-    return await strategy(paymentPlatform, data);
 };
 
 module.exports = {

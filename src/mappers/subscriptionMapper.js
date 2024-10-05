@@ -25,7 +25,7 @@ const calculateEndDate = (subscriptionType, hasTrialDays, plane) => {
     return null
 }
 
-const toSubscriptionPeriodEntity = (subscription, prices, hasTrialDays, plane) => {
+const toSubscriptionPeriodEntity = (subscription, subscriptionType, prices, hasTrialDays, plane) => {
     return {
         subscriptionId: subscription.id,
         planeId: prices.planeId,
@@ -33,7 +33,7 @@ const toSubscriptionPeriodEntity = (subscription, prices, hasTrialDays, plane) =
         price: prices.price,
         state: hasTrialDays ? 'ACTIVE' : 'PENDING',
         startDate: moment(),
-        endDate: calculateEndDate(subscription.subscriptionType.code, hasTrialDays, plane)
+        endDate: calculateEndDate(subscriptionType.code, hasTrialDays, plane)
     }
 }
 
@@ -117,7 +117,10 @@ const toSubscription = async (subscription, user) => {
         id: subscription.id,
         user: user,
         planeName: plane.name,
-        endDate: moment(period.endDate).format('DD/MM/YYYY')
+        endDate: moment(period.endDate).format('DD/MM/YYYY'),
+        paymentPlatformId: subscription.paymentPlatformId,
+        referenceId: subscription.referenceId,
+        state: subscription.state,
     }
 }
 

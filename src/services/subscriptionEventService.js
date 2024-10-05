@@ -14,8 +14,9 @@ const getSubscriptionByCustomerId = async (platform, customerId) => {
 
     const userPaymentPlatform = await UserPaymentPlatformRepository.findOne(userData)
     
-    if (userPaymentPlatform)
+    if (userPaymentPlatform) {
         return await SubscriptionService.getByUserId(userPaymentPlatform.userId)
+    }
     
     return null
 }
@@ -78,7 +79,8 @@ const subscriptionPaid = async (paymentPlatform, event) => {
     const subscription = await getSubscription(paymentPlatform, event);
 
     if (subscription) {
-        return await SubscriptionService.paid(subscription);
+        await SubscriptionService.paid(subscription);
+        await send(subscription)
     } 
 }
 
@@ -94,6 +96,7 @@ const cancelSubscription = async (paymentPlatform, event) => {
 
 const getStrategy = (eventType) => {
     const strategy = {
+        'PAID': execute = async () => subscriptionPaid,
         'CANCEL': execute = async () => cancelSubscription,
         'SUSPEND': execute = async () => suspendSubscription
     }

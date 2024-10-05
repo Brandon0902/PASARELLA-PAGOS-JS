@@ -26,11 +26,11 @@ const saveSubscription = async (plane, subsType, price, user, result, hasTrialDa
         
         const subscription = Mapper.toSubscriptionEntity(user.id, result, hasTrialDays)
         const subscriptionCreated = await SubscriptionRepository.create(subscription, t)
+
         const period = await SubscriptionPeriodRespository.create(
-            Mapper.toSubscriptionPeriodEntity(subscriptionCreated, price, hasTrialDays, plane), t
+            Mapper.toSubscriptionPeriodEntity(subscriptionCreated, subsType, price, hasTrialDays, plane), t
         )
 
-        subscriptionCreated.subscriptionType = subsType
         subscriptionCreated.lastPeriod = period
 
         await UserPaymentPlatformRepository.create(Mapper.toUserPaymentPlatformEntity(1, user, result), t)
@@ -56,14 +56,16 @@ const applyFreeTrial = async (userId) => {
 const getSubscription = async (id, userId) => {
     const subscription = await SubscriptionRepository.findByIdAndUserId(id, userId)
 
-    if (subscription === null)
+    if (subscription === null) {
         throw new NotFoundError('subscription not found')
+    }
 
     const paymentPlatformId = subscription.paymentPlatformId
     const userPayPlatform = await UserPaymentPlatformRepository.findOne({ userId, paymentPlatformId })
 
-    if (userPayPlatform === null)
+    if (userPayPlatform === null) {
         throw new NotFoundError('user payment platform not found')
+    }
 
     const subscriptionData = {
         id: subscription.id,
@@ -108,8 +110,9 @@ const cancelSubscription = async (subscription) => {
         // Cancel subscription on payment platform
         const isCanceled = await PaymentPlatformService.cancelSubscription(subscription)
 
-        if(!isCanceled)
+        if(!isCanceled) {
             throw new InternalServerError('error to trying cancel subscription. Retry later')
+        }
 
         return updated
     }, subscription)
@@ -137,7 +140,9 @@ const create = async (data) => {
 
     const subscription = await saveSubscription(plane, subsType, price, user, result, hasTrialDays)
 
-    await send(await Mapper.toSubscription(subscription, user))
+    if (subscription.state === 'ACTIVE') {
+        await send(await Mapper.toSubscription(subscription, user))
+    }
 
     return subscription
 }
