@@ -42,7 +42,19 @@ const cancel = async (req, res, next) => {
     }
 }
 
+const getActiveSubscription = async (req, res, next) => {
+    try {
+        const user = req.user;
+        const subscription = await SubscriptionService.getActiveSubscription(user.id);
+        return res.status(200).send(subscription);
+    } catch (err) {
+        console.error(err);
+        next(err);
+    }
+}
+
 module.exports = {
     create,
-    cancel
+    cancel,
+    getActiveSubscription,
 }
