@@ -1,9 +1,4 @@
-const axios = require('axios');
-const dotenv = require('dotenv');
-const { conektaClient } = require('../services/httpService')
-
-dotenv.config();
-const CONEKTA_API_KEY = process.env.CONEKTA_API_KEY;
+const { conektaClient } = require('../services/httpService');
 
 async function createSubscription(customerData, planId, paymentType) {
     const conektaSubscription = {
@@ -20,13 +15,7 @@ async function createSubscription(customerData, planId, paymentType) {
     };
 
     try {
-        const response = await axios.post('https://api.conekta.io/customers', conektaSubscription, {
-            headers: {
-                'Accept': 'application/vnd.conekta-v2.1.0+json',
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${CONEKTA_API_KEY}`
-            }
-        });
+        const response = await conektaClient.post('/customers', conektaSubscription);
 
         return {
             customerId: response.data.id,
@@ -39,10 +28,8 @@ async function createSubscription(customerData, planId, paymentType) {
 }
 
 const cancelSusbcription = async (subscription) => {
-
-    const { customerId } = subscription
-
-    return await conektaClient.post(`/customers/${customerId}/subscription/cancel`)
+    const { customerId } = subscription;
+    return await conektaClient.post(`/customers/${customerId}/subscription/cancel`);
 }
 
 module.exports = { createSubscription, cancelSusbcription };

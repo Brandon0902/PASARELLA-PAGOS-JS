@@ -11,29 +11,53 @@ const toSubscriptionEntity = (userId, paymentData, hasTrialDays) => {
     }
 }
 
-const calculateEndDate = (subscriptionType, hasTrialDays, plane) => {
-    
+const calculateEndDate = (subscriptionType, hasTrialDays, plane, startDate) => {
     if (hasTrialDays) {
-        return moment().add(plane.trialDays, 'day')
+        return moment(startDate).add(plane.trialDays, 'day');
     }
 
-    switch(subscriptionType) {
-        case 'MONTHLY': return moment().add(1, 'month')
-        case 'YEARLY': return moment().add(1, 'year')
+    switch (subscriptionType) {
+        case 'MONTHLY':
+            return moment(startDate).add(1, 'month');
+        case 'YEARLY':
+            return moment(startDate).add(1, 'year');
     }
 
-    return null
+    return null;
 }
 
 const toSubscriptionPeriodEntity = (subscription, prices, hasTrialDays, plane) => {
+    const startDate = moment();
     return {
         subscriptionId: subscription.id,
         planeId: prices.planeId,
         subscriptionTypeId: prices.subscriptionTypeId,
         price: prices.price,
         state: hasTrialDays ? 'ACTIVE' : 'PENDING',
-        startDate: moment(),
-        endDate: calculateEndDate(subscription.subscriptionType.code, hasTrialDays, plane)
+        startDate: startDate,
+        endDate: calculateEndDate(subscription.subscriptionType.code, hasTrialDays, plane, startDate)
+    };
+}
+
+const toNextSubscriptionPeriodEntity = (subscription, currentPeriod, subscriptionType, plane) => {
+    const startDate = currentPeriod.endDate;
+    return {
+        subscriptionId: subscription.id,
+        planeId: currentPeriod.planeId,
+        subscriptionTypeId: currentPeriod.subscriptionTypeId,
+        price: currentPeriod.price,
+        state: 'ACTIVE',
+        startDate: startDate,
+        endDate: calculateEndDate(subscriptionType.code, false, plane, startDate)
+    };
+}
+
+
+const toSubscriptionPeriodEntity1 = (subscriptionPeriod, state, errorDetails = null, endDate = null) => {
+    return {
+        state: state || subscriptionPeriod.state,
+        errorDetails,
+        endDate: endDate || subscriptionPeriod.endDate 
     }
 }
 
@@ -43,6 +67,14 @@ const toUserPaymentPlatformEntity = (paymentPlatformId, userId, paymentData) => 
         paymentPlatformId,
         referenceId: paymentData.customerId,
         state: 'ACTIVE'
+    }
+}
+
+const toSubscriptionEntity1 = (subscription, state, endDate = null) => {
+    return {
+        state: state,
+        endDate: endDate || subscription.endDate,
+        updatedAt: moment()
     }
 }
 
@@ -67,5 +99,8 @@ module.exports = {
     toSubscriptionPeriodEntity,
     toUserPaymentPlatformEntity,
     toCancelSubscriptionEntity,
-    toEndedSubscriptionPeriodEntity
+    toEndedSubscriptionPeriodEntity,
+    toSubscriptionEntity1,
+    toSubscriptionPeriodEntity1,
+    toNextSubscriptionPeriodEntity
 }

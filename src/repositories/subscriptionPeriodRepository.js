@@ -8,7 +8,12 @@ const update = async (id, entity, tx) => {
     return await SubscriptionPeriod.update(entity, {where: {id: id}, transaction: tx})
 }
 
+const findOne = async (data) => {
+    return await SubscriptionPeriod.findOne({where: { ...data }})
+}
+
 module.exports = {
     create,
-    update
+    update,
+    findOne
 }
