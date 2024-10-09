@@ -1,5 +1,4 @@
 const { decodeJWT } = require('../utils/decode')
-const appConfig = require('../config/config')
 const Schema = require('../validations/schemas')
 
 const getUserData = (token) => {
@@ -38,17 +37,6 @@ const checkAuthToken = (req, res, next) => {
     return next();
 }
 
-const checkApiKey = (req, res, next) => {
-    const apiKey = req.query.apiKey
-
-    if (apiKey !== appConfig.properties.WEBHOOK_API_KEY) {
-        return res.status(401).send({error: 'unauthorized error'})
-    }
-
-    return next()
-}
-
 module.exports = {
     checkAuthToken,
-    checkApiKey
 }
