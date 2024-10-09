@@ -11,16 +11,15 @@ const toSubscriptionEntity = (userId, paymentData, hasTrialDays) => {
     }
 }
 
-const calculateEndDate = (subscriptionType, hasTrialDays, plane, startDate = moment()) => {
-    
+const calculateEndDate = (subscriptionType, hasTrialDays, plane, startDate) => {
     if (hasTrialDays) {
         return moment(startDate).add(plane.trialDays, 'day');
     }
 
-    switch(subscriptionType) {
-        case 'MONTHLY': 
+    switch (subscriptionType) {
+        case 'MONTHLY':
             return moment(startDate).add(1, 'month');
-        case 'YEARLY': 
+        case 'YEARLY':
             return moment(startDate).add(1, 'year');
     }
 
@@ -28,27 +27,29 @@ const calculateEndDate = (subscriptionType, hasTrialDays, plane, startDate = mom
 }
 
 const toSubscriptionPeriodEntity = (subscription, prices, hasTrialDays, plane) => {
+    const startDate = moment();
     return {
         subscriptionId: subscription.id,
         planeId: prices.planeId,
         subscriptionTypeId: prices.subscriptionTypeId,
         price: prices.price,
         state: hasTrialDays ? 'ACTIVE' : 'PENDING',
-        startDate: moment(),
-        endDate: calculateEndDate(subscription.subscriptionType.code, hasTrialDays, plane)
+        startDate: startDate,
+        endDate: calculateEndDate(subscription.subscriptionType.code, hasTrialDays, plane, startDate)
     };
 }
 
 const toNextSubscriptionPeriodEntity = (subscription, currentPeriod, subscriptionType, plane) => {
+    const startDate = currentPeriod.endDate;
     return {
         subscriptionId: subscription.id,
         planeId: currentPeriod.planeId,
         subscriptionTypeId: currentPeriod.subscriptionTypeId,
         price: currentPeriod.price,
         state: 'ACTIVE',
-        startDate: currentPeriod.endDate,
-        endDate: calculateEndDate(subscriptionType.code, false, plane, currentPeriod.endDate)
-    }
+        startDate: startDate,
+        endDate: calculateEndDate(subscriptionType.code, false, plane, startDate)
+    };
 }
 
 
