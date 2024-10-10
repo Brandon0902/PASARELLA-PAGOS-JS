@@ -38,7 +38,7 @@ const createPaymentPlatform = async (data) => {
     await validatePaymentPlatform(data.paymentPlatformId)
 
     data.state = 'ACTIVE'
-    data.createdAt = moment()
+    data.createdAt = moment().utc()
 
     return await PlanePaymentPlatform.create(data)
 }

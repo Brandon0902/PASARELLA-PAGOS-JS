@@ -17,7 +17,7 @@ const buildSubscriptionData = async (subscription) => {
     return {
         data: {
             planeName: subscription.planeName,
-            renewDate: subscription.endDate,
+            renewDate: subscription.renewDate,
             contactEmail: appConfig.properties.SUPPORT_EMAIL_CONTACT
         },
         subject: '¡Ya eres parte de Lexfania! Comienza usar la plataforma hoy mismo',

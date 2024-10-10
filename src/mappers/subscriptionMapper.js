@@ -13,21 +13,21 @@ const toSubscriptionEntity = (userId, paymentData, hasTrialDays) => {
 
 const calculateEndDate = (subscriptionType, hasTrialDays, plane, startDate) => {
     if (hasTrialDays) {
-        return moment(startDate).add(plane.trialDays, 'day');
+        return moment(startDate).utc().add(plane.trialDays, 'day');
     }
 
     switch (subscriptionType) {
         case 'MONTHLY':
-            return moment(startDate).add(1, 'month');
+            return moment(startDate).utc().add(1, 'month');
         case 'YEARLY':
-            return moment(startDate).add(1, 'year');
+            return moment(startDate).utc().add(1, 'year');
     }
 
     return null;
 }
 
 const toSubscriptionPeriodEntity = (subscription, subscriptionType, prices, hasTrialDays, plane) => {
-    const startDate = moment();
+    const startDate = moment().utc();
     return {
         subscriptionId: subscription.id,
         planeId: prices.planeId,
@@ -77,23 +77,23 @@ const toSubscriptionEntity1 = (subscription, state, endDate = null) => {
     return {
         state: state,
         endDate: endDate || subscription.endDate,
-        updatedAt: moment()
+        updatedAt: moment().utc()
     }
 }
 
 const toCancelSubscriptionEntity = () => {
     return {
         state: 'CANCELED',
-        endDate: moment(),
-        updatedAt: moment()
+        endDate: moment().utc(),
+        updatedAt: moment().utc()
     }
 }
 
 const toEndedSubscriptionPeriodEntity = () => {
     return {
         state: 'ENDED',
-        endDate: moment(),
-        updatedAt: moment()
+        endDate: moment().utc(),
+        updatedAt: moment().utc()
     }
 }
 
@@ -113,15 +113,16 @@ const getPeriod = async(subscription) => {
     return subscription.lastPeriod
 }
 
-const toSubscription = async (subscription, user) => {
-    const period = await getPeriod(subscription)
-    const plane = await period.getPlane()
+const toSubscription = async (subscription, user, period = null) => {
+    const lastPeriod = period || await getPeriod(subscription)
+    const plane = await lastPeriod.getPlane()
     
     return {
         id: subscription.id,
         user: user,
         planeName: plane.name,
-        endDate: moment(period.endDate).format('DD/MM/YYYY'),
+        endDate: subscription.endDate,
+        renewDate: moment(lastPeriod.endDate).format('DD/MM/YYYY'),
         paymentPlatformId: subscription.paymentPlatformId,
         referenceId: subscription.referenceId,
         state: subscription.state,

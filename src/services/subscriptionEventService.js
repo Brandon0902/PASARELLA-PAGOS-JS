@@ -79,8 +79,8 @@ const subscriptionPaid = async (paymentPlatform, event) => {
     const subscription = await getSubscription(paymentPlatform, event);
 
     if (subscription) {
-        await SubscriptionService.paid(subscription);
-        await send(subscription)
+        const subscriptionUpdate = await SubscriptionService.paid(subscription);
+        await send(subscriptionUpdate)
     } 
 }
 

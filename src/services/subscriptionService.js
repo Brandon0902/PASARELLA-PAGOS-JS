@@ -200,6 +200,8 @@ const suspend = async (id, data = null) => {
 const paid = async (subscription) => {
     try {
         
+        let lastPeriod = null
+
         if (subscription.state === 'PENDING') {
             await SubscriptionRepository.update(subscription.id, { state: 'ACTIVE' });
             subscription.state = 'ACTIVE';
@@ -225,10 +227,10 @@ const paid = async (subscription) => {
                 currentPeriod,
                 subscriptionType
             );
-            await SubscriptionPeriodRespository.create(newPeriod);
+            lastPeriod = await SubscriptionPeriodRespository.create(newPeriod);
         }
 
-        return subscription;
+        return Mapper.toSubscription(subscription, subscription.user, lastPeriod);
 
     } catch (error) {
         throw new InternalServerError(`Error processing subscription: ${error.message}`);

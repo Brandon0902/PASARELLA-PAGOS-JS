@@ -28,7 +28,7 @@ const handleSubscriptionCanceled = async (paymentPlatform, eventData) => {
     const event = {
         type: 'CANCEL',
         data: {
-            subscription_id: eventData.object.id
+            subscription_id: eventData.data.object.id
         }
     }
     return await SubscriptionEventService.cancelSubscription(paymentPlatform, event)
