@@ -197,6 +197,35 @@ const suspend = async (id, data = null) => {
     return await suspendSubscription({id, ...data})
 }
 
+const getActiveSubscription = async (userId) => {
+    const subscription = await getByUserId(userId);
+
+    if (!subscription) {
+        throw new NotFoundError('No active subscription found');
+    }
+
+    const subscriptionPeriod = await getPeriodBySubscriptionId(subscription.id);
+
+    if (!subscriptionPeriod || subscriptionPeriod.state !== 'ACTIVE') {
+        throw new NotFoundError('No active subscription period found');
+    }
+
+    const plane = await PlaneService.getById(subscriptionPeriod.planeId);
+    const subscriptionType = await getSubscriptionType(subscriptionPeriod.subscriptionTypeId);
+
+   
+    return {
+        id: subscription.id,
+        userId: subscription.userId,
+        planeName: plane.name,
+        subscriptionType: subscriptionType.name,
+        startDate: subscriptionPeriod.startDate,
+        endDate: subscriptionPeriod.endDate,
+        renewDate: subscriptionPeriod.endDate,
+        state: subscription.state
+    };
+}
+
 const paid = async (subscription) => {
     try {
         
@@ -244,5 +273,6 @@ module.exports = {
     suspend,
     getByUserId,
     getByReferenceId,
-    paid
+    paid,
+    getActiveSubscription 
 }
