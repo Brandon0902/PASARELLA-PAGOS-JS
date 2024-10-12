@@ -1,5 +1,6 @@
 const { PaymentPlatform, PlanePaymentPlatform } = require('../models/plane');
 const conektaService = require('./conektaService');
+const { NotFoundError } = require('../handlers/errors');
 
 const getStrategy = (paymentPlatformName) => {
     
@@ -26,6 +27,10 @@ async function processPaymentPlatforms(customerData, paymentType) {
                 attributes: ['id', 'name', 'state', 'createdAt']
             }]
         });
+
+        if (paymentPlatforms.length === 0) {
+            throw new NotFoundError('Error al procesar las plataformas de pago');
+          }
 
         // Recorrer cada plataforma de pago
         for (let platform of paymentPlatforms) {

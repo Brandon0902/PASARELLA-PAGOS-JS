@@ -88,5 +88,5 @@ const cancelSubscription = async (paymentPlatform, event) => {
 module.exports = {
     suspendSubscription,
     cancelSubscription,
-    subscriptionPaid
+    subscriptionPaid,
 }

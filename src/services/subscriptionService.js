@@ -114,13 +114,11 @@ const cancelSubscription = async (subscription) => {
 }
 
 const create = async (data) => {
-    const user = data.user
+    const user = data.user;
     const plane = await PlaneService.getById(data.subscriptionRequest.plane_id);
     const subsType = await getSubscriptionType(data.subscriptionRequest.subscription_type_id);
-    const price = await getPlanePrice(plane.id, subsType.id)
-
-    // Value to create trial period
-    const hasTrialDays = await applyFreeTrial(user.id)
+    const price = await getPlanePrice(plane.id, subsType.id);
+    const hasTrialDays = await applyFreeTrial(user.id);
 
     // Get payment platform strategy
     const userData = {
