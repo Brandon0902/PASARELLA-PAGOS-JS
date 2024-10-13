@@ -80,6 +80,20 @@ const getSubscription = async (id, userId) => {
     return subscriptionData
 }
 
+const updateCurrentSubscriptionPeriod = async (subscriptionId, data, tx) => {
+    const period = await getPeriodBySubscriptionId(subscriptionId)
+
+    const periodData = Mapper.toSubscriptionPeriodEntity1(period, data)
+
+    const [count, [updated]] = await SubscriptionPeriodRespository.update(period.id, periodData, tx)
+
+    if (count === 0) {
+        throw new InternalServerError(`error to trying update period ${data} subscription ${subscriptionId}`)
+    }
+
+    return updated
+}
+
 const executeTransaction = async (func, data) => {
     try {
         
@@ -105,7 +119,7 @@ const cancelSubscription = async (subscription) => {
         const [ _, [updated]] = await SubscriptionRepository.update(id, subscriptionData, t)
 
         const periodData = Mapper.toEndedSubscriptionPeriodEntity()
-        await SubscriptionPeriodRespository.update(id, periodData, t)
+        await updateCurrentSubscriptionPeriod(id, periodData, t)
 
         // Cancel subscription on payment platform
         const isCanceled = await PaymentPlatformService.cancelSubscription(subscription)
@@ -163,10 +177,16 @@ const getByReferenceId = async (paymentPlatformId, referenceId) => {
 }
 
 const getPeriodBySubscriptionId = async (id) => {
-    return await SubscriptionPeriodRespository.findOne({
+    const period = await SubscriptionPeriodRespository.findOne({
         subscriptionId: id,
         state: { [Op.in]: ['ACTIVE', 'PENDING', 'ERROR'] }
     })
+
+    if (period === null) {
+        throw new NotFoundError(`not exists current period for subscription ${id}`)
+    }
+
+    return period
 }
 
 const suspendSubscription = async (subscription) => {
@@ -178,15 +198,12 @@ const suspendSubscription = async (subscription) => {
 
         const updated = SubscriptionRepository.update(id, data, tx)
 
-        const period = await getPeriodBySubscriptionId(id)
-
-        const periodData = Mapper.toSubscriptionPeriodEntity1(
-            period,
-            'ERROR',
-            { error: { ...errors } = subscription}
-        )
-
-        await SubscriptionPeriodRespository.update(period.id, periodData, tx)
+        const { errors } = subscription
+        const periodData = { 
+            state: 'ERROR',
+            errorDetails: {error: errors}
+        }
+        await updateCurrentSubscriptionPeriod(id, periodData, tx)
 
         return updated
 
@@ -226,14 +243,24 @@ const getActiveSubscription = async (userId) => {
     };
 }
 
+const updateSubscription = async (id, data) => {
+    const [ count , result ] = await SubscriptionRepository.update(id, data);
+    
+    if (count === 0) {
+        throw new InternalServerError(`error to trying update ${data} of subscription ${id}`)
+    }
+
+    return result[0]
+}
+
 const paid = async (subscription) => {
     try {
         
+        let subscriptionUpdated = null
         let lastPeriod = null
 
         if (subscription.state === 'PENDING') {
-            await SubscriptionRepository.update(subscription.id, { state: 'ACTIVE' });
-            subscription.state = 'ACTIVE';
+            subscriptionUpdated = await updateSubscription(subscription.id, {state: 'ACTIVE'})
         }
 
         const currentPeriod = await getPeriodBySubscriptionId(subscription.id);
@@ -259,10 +286,12 @@ const paid = async (subscription) => {
             lastPeriod = await SubscriptionPeriodRespository.create(newPeriod);
         }
 
-        return Mapper.toSubscription(subscription, subscription.user, lastPeriod);
+        const currentSubscription = subscriptionUpdated || subscription
+
+        return Mapper.toSubscription(currentSubscription, subscription.user, lastPeriod); // Hay un problema con las que se actualizan a active
 
     } catch (error) {
-        throw new InternalServerError(`Error processing subscription: ${error.message}`);
+        throw new InternalServerError(`Error processing subscription ${subscription.id}: ${error.message}`);
     }
 };
 

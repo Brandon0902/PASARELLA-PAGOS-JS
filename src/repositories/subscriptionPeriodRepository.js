@@ -5,7 +5,7 @@ const create = async (entity, transaction) => {
 }
 
 const update = async (id, entity, tx) => {
-    return await SubscriptionPeriod.update(entity, {where: {id: id}, transaction: tx})
+    return await SubscriptionPeriod.update(entity, {where: {id: id}, transaction: tx, returning: true})
 }
 
 const findOne = async (data) => {

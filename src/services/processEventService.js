@@ -1,4 +1,5 @@
 const SubscriptionEventService = require('../services/subscriptionEventService')
+const { NotFoundError } = require('../handlers/errors')
 
 const handleSubscriptionPaid = async (paymentPlatform, subscriptionPaidData) => {
     const { data } = subscriptionPaidData;
@@ -43,8 +44,9 @@ const getPaymentPlatform = (eventType) => {
 
     const isConekta = conektaEvents.includes(eventType)
 
-    if(isConekta)
+    if(isConekta) {
         return 'CONEKTA'
+    }
     
     return 'UNKNOWN'
 }
@@ -64,7 +66,7 @@ const executeStrategy = async (eventType, data) => {
         const strategy = strategies[eventType];
 
         if (!strategy) {
-            throw new Error(`Estrategia no encontrada para el evento: ${eventType}`);
+            throw new NotFoundError(`Estrategia no encontrada para el evento: ${eventType}`);
         }
     
         const paymentPlatform = getPaymentPlatform(eventType)
