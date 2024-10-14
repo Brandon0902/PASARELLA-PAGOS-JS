@@ -200,17 +200,16 @@ const getActiveSubscription = async (userId) => {
     const plane = await PlaneService.getById(subscriptionPeriod.planeId);
     const subscriptionType = await getSubscriptionType(subscriptionPeriod.subscriptionTypeId);
 
-   
-    return {
+    return [{
         id: subscription.id,
         userId: subscription.userId,
         planeName: plane.name,
-        subscriptionType: subscriptionType.name,
+        subscriptionType: subscriptionType.code,
         startDate: subscriptionPeriod.startDate,
         endDate: subscriptionPeriod.endDate,
         renewDate: subscriptionPeriod.endDate,
         state: subscription.state
-    };
+    }];
 }
 
 const paid = async (subscription) => {
