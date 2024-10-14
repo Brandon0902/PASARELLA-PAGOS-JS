@@ -1,4 +1,5 @@
 const moment = require('moment')
+const { NotFoundError } = require('../handlers/errors')
 
 const toSubscriptionEntity = (userId, paymentData, hasTrialDays) => {
     return {
@@ -53,11 +54,12 @@ const toNextSubscriptionPeriodEntity = (subscription, currentPeriod, subscriptio
 }
 
 
-const toSubscriptionPeriodEntity1 = (subscriptionPeriod, state, errorDetails = null, endDate = null) => {
+const toSubscriptionPeriodEntity1 = (subscriptionPeriod, data) => {
     return {
-        state: state || subscriptionPeriod.state,
-        errorDetails,
-        endDate: endDate || subscriptionPeriod.endDate 
+        state: data.state || subscriptionPeriod.state,
+        errorDetails: data.errorDetails || subscriptionPeriod.errorDetails,
+        endDate: data.endDate || subscriptionPeriod.endDate,
+        updatedAt: moment().utc(),
     }
 }
 
@@ -93,7 +95,6 @@ const toEndedSubscriptionPeriodEntity = () => {
     return {
         state: 'ENDED',
         endDate: moment().utc(),
-        updatedAt: moment().utc()
     }
 }
 
@@ -104,7 +105,7 @@ const getPeriod = async(subscription) => {
         const first = result.filter(item => item.state === 'ACTIVE' || item.state === 'PENDING').pop()
 
         if (!first) {
-            throw new Error('error to trying current period')
+            throw new NotFoundError(`error to trying current period for suscription ${subscription.id}`)
         }
 
         return first

@@ -12,7 +12,7 @@ const getById = async (id) => {
     const result = await repository.findById(id);
     
     if (result === null) {
-        throw new NotFoundError(`plane not '${id}' found`)
+        throw new NotFoundError(`plane '${id}' not found`)
     }
     
     return result
