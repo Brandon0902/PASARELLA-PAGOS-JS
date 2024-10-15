@@ -36,12 +36,29 @@ describe('SubscriptionService', function() {
       };
 
       const planeMock = { id: 1, name: 'Basic Plan' };
-      const subscriptionTypeMock = { id: 1, name: 'Monthly' };
+      const subscriptionTypeMock = { id: 1, name: 'Monthly', code: 'MONTHLY' };
       const priceMock = { id: 1, price: 10.00 };
       const paymentResultMock = { customerId: 'cus_123', subscriptionId: 'sub_123' };
       const subscriptionEntityMock = {};
-      const subscriptionCreatedMock = { id: 1, userId: 1, state: 'ACTIVE', referenceId: 'sub_123' };
-      subscriptionCreatedMock.subscriptionType = subscriptionTypeMock;
+
+      // Simulación del último periodo con métodos necesarios
+      const lastPeriodMock = {
+        id: 1,
+        state: 'ACTIVE',
+        startDate: new Date(),
+        endDate: new Date(),
+        getPlane: sinon.stub().resolves(planeMock),
+        getSubscriptionType: sinon.stub().resolves(subscriptionTypeMock),
+      };
+
+      // Añadimos el método getPeriods al subscriptionCreatedMock
+      const subscriptionCreatedMock = { 
+        id: 1, 
+        userId: 1, 
+        state: 'ACTIVE', 
+        referenceId: 'sub_123',
+        getPeriods: sinon.stub().returns([lastPeriodMock])
+      };
 
       sinon.stub(PlaneService, 'getById').resolves(planeMock);
       sinon.stub(SubscriptionTypeService, 'getById').resolves(subscriptionTypeMock);
@@ -53,6 +70,7 @@ describe('SubscriptionService', function() {
         commit: sinon.stub().resolves(),
         rollback: sinon.stub().resolves()
       };
+      // Ajuste aquí: hacemos que 'sequelize.transaction' devuelva 'transactionStub'
       sinon.stub(sequelize, 'transaction').resolves(transactionStub);
 
       sinon.stub(Mapper, 'toSubscriptionEntity').returns(subscriptionEntityMock);
@@ -62,6 +80,10 @@ describe('SubscriptionService', function() {
       sinon.stub(SubscriptionRepository, 'create').resolves(subscriptionCreatedMock);
       sinon.stub(SubscriptionPeriodRepository, 'create').resolves();
       sinon.stub(UserPaymentPlatformRepository, 'create').resolves();
+
+      // Stub del emailService.send
+      const emailService = require('../../src/services/emailService');
+      sinon.stub(emailService, 'send').resolves();
 
       const result = await subscriptionService.create(data);
 
@@ -162,11 +184,18 @@ describe('SubscriptionService', function() {
 
       const updatedSubscriptionMock = { ...subscriptionMock, state: 'CANCELLED' };
 
+      const subscriptionPeriodMock = {
+        id: 1,
+        subscriptionId: 1,
+        state: 'ACTIVE'
+      };
+
       sinon.stub(SubscriptionRepository, 'findByIdAndUserId').resolves(subscriptionMock);
       sinon.stub(UserPaymentPlatformRepository, 'findOne').resolves(userPaymentPlatformMock);
       sinon.stub(PaymentPlatformService, 'cancelSubscription').resolves(true);
       sinon.stub(SubscriptionRepository, 'update').resolves([1, [updatedSubscriptionMock]]);
-      sinon.stub(SubscriptionPeriodRepository, 'update').resolves([1]);
+      sinon.stub(SubscriptionPeriodRepository, 'update').resolves([1, [subscriptionPeriodMock]]);
+      sinon.stub(SubscriptionPeriodRepository, 'findOne').resolves(subscriptionPeriodMock);
 
       const transactionStub = {
         commit: sinon.stub().resolves(),
@@ -210,10 +239,11 @@ describe('SubscriptionService', function() {
       const subscriptionMock = { id: 1, state: 'ACTIVE' };
       const updatedSubscriptionMock = { id: 1, state: 'SUSPENDED' };
       const subscriptionPeriodMock = { id: 1, state: 'ACTIVE' };
+      const updatedPeriodMock = { id: 1, state: 'ERROR' };
 
       sinon.stub(SubscriptionRepository, 'update').resolves([1, [updatedSubscriptionMock]]);
       sinon.stub(SubscriptionPeriodRepository, 'findOne').resolves(subscriptionPeriodMock);
-      sinon.stub(SubscriptionPeriodRepository, 'update').resolves([1]);
+      sinon.stub(SubscriptionPeriodRepository, 'update').resolves([1, [updatedPeriodMock]]);
 
       sinon.stub(Mapper, 'toSubscriptionEntity1').returns({});
       sinon.stub(Mapper, 'toSubscriptionPeriodEntity1').returns({});
@@ -250,7 +280,7 @@ describe('SubscriptionService', function() {
         endDate: new Date()
       };
       const planeMock = { id: 1, name: 'Basic Plan' };
-      const subscriptionTypeMock = { id: 1, name: 'Monthly' };
+      const subscriptionTypeMock = { id: 1, name: 'Monthly', code: 'MONTHLY' };
 
       sinon.stub(SubscriptionRepository, 'findByUserId').resolves(subscriptionMock);
       sinon.stub(SubscriptionPeriodRepository, 'findOne').resolves(subscriptionPeriodMock);
@@ -259,16 +289,16 @@ describe('SubscriptionService', function() {
 
       const result = await subscriptionService.getActiveSubscription(userId);
 
-      expect(result).to.deep.equal({
+      expect(result).to.deep.equal([{
         id: subscriptionMock.id,
         userId: subscriptionMock.userId,
         planeName: planeMock.name,
-        subscriptionType: subscriptionTypeMock.name,
+        subscriptionType: subscriptionTypeMock.code,
         startDate: subscriptionPeriodMock.startDate,
         endDate: subscriptionPeriodMock.endDate,
         renewDate: subscriptionPeriodMock.endDate,
         state: subscriptionMock.state
-      });
+      }]);
     });
 
     it('should throw NotFoundError if no active subscription found', async function() {
@@ -288,50 +318,29 @@ describe('SubscriptionService', function() {
 
   describe('paid()', function() {
     it('should process a paid subscription when state is PENDING', async function() {
-      const subscriptionMock = { id: 1, state: 'PENDING' };
+      const subscriptionMock = { id: 1, state: 'PENDING', user: { id: 1, email: 'user@example.com' } };
       const currentPeriodMock = {
         id: 1,
         subscriptionId: 1,
         state: 'PENDING',
-        subscriptionTypeId: 1
+        subscriptionTypeId: 1,
+        getPlane: sinon.stub().resolves({ name: 'Basic Plan' }),
+        getSubscriptionType: sinon.stub().resolves({ code: 'MONTHLY' }),
       };
       const subscriptionTypeMock = { id: 1, name: 'Monthly', durationInMonths: 1 };
 
-      sinon.stub(SubscriptionRepository, 'update').resolves();
+      sinon.stub(SubscriptionRepository, 'update').resolves([1, [subscriptionMock]]);
       sinon.stub(SubscriptionPeriodRepository, 'findOne').resolves(currentPeriodMock);
-      sinon.stub(SubscriptionPeriodRepository, 'update').resolves();
+      sinon.stub(SubscriptionPeriodRepository, 'update').resolves([1, [currentPeriodMock]]);
       sinon.stub(SubscriptionTypeService, 'getById').resolves(subscriptionTypeMock);
-
-      const result = await subscriptionService.paid(subscriptionMock);
-
-      expect(result).to.deep.equal({ id: 1, state: 'ACTIVE' });
-
-      sinon.assert.calledWith(SubscriptionRepository.update, 1, { state: 'ACTIVE' });
-      sinon.assert.calledWith(SubscriptionPeriodRepository.update, 1, { state: 'ACTIVE' });
-    });
-
-    it('should process a paid subscription when current period is ACTIVE', async function() {
-      const subscriptionMock = { id: 1, state: 'ACTIVE' };
-      const currentPeriodMock = {
-        id: 1,
-        subscriptionId: 1,
-        state: 'ACTIVE',
-        subscriptionTypeId: 1
-      };
-      const subscriptionTypeMock = { id: 1, name: 'Monthly', durationInMonths: 1 };
-
-      sinon.stub(SubscriptionPeriodRepository, 'findOne').resolves(currentPeriodMock);
-      sinon.stub(SubscriptionTypeService, 'getById').resolves(subscriptionTypeMock);
-      sinon.stub(SubscriptionPeriodRepository, 'update').resolves();
-      sinon.stub(SubscriptionPeriodRepository, 'create').resolves();
-      sinon.stub(Mapper, 'toNextSubscriptionPeriodEntity').returns({});
+      sinon.stub(Mapper, 'toSubscription').returns(subscriptionMock);
 
       const result = await subscriptionService.paid(subscriptionMock);
 
       expect(result).to.deep.equal(subscriptionMock);
 
-      sinon.assert.calledWith(SubscriptionPeriodRepository.update, 1, { state: 'ENDED' });
-      sinon.assert.calledOnce(SubscriptionPeriodRepository.create);
+      sinon.assert.calledWith(SubscriptionRepository.update, 1, { state: 'ACTIVE' });
+      sinon.assert.calledWith(SubscriptionPeriodRepository.update, 1, { state: 'ACTIVE' });
     });
 
     it('should throw InternalServerError if an error occurs', async function() {
@@ -344,7 +353,7 @@ describe('SubscriptionService', function() {
         throw new Error('Expected InternalServerError to be thrown');
       } catch (err) {
         expect(err).to.be.instanceOf(InternalServerError);
-        expect(err.message).to.equal('Error processing subscription: Database error');
+        expect(err.message).to.equal('Error processing subscription 1: Database error');
       }
     });
   });

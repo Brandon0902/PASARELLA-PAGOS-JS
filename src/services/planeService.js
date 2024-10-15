@@ -12,7 +12,7 @@ const getById = async (id) => {
     const result = await repository.findById(id);
     
     if (result === null) {
-        throw new NotFoundError(`plane not '${id}' found`)
+        throw new NotFoundError(`plane '${id}' not found`)
     }
     
     return result
@@ -38,7 +38,7 @@ const createPaymentPlatform = async (data) => {
     await validatePaymentPlatform(data.paymentPlatformId)
 
     data.state = 'ACTIVE'
-    data.createdAt = moment()
+    data.createdAt = moment().utc()
 
     return await PlanePaymentPlatform.create(data)
 }

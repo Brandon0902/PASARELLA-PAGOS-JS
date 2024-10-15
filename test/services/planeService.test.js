@@ -2,13 +2,11 @@ const { expect } = require('chai');
 const sinon = require('sinon');
 
 const planeService = require('../../src/services/planeService');
-
 const repository = require('../../src/repositories/planeRepository');
 const { PlanePaymentPlatform, PaymentPlatform } = require('../../src/models/plane');
 const SubscriptionTypeService = require('../../src/services/subscriptionTypeService');
 const { NotFoundError } = require('../../src/handlers/errors');
 const moment = require('moment');
-
 
 describe('PlaneService', function() {
 
@@ -48,7 +46,7 @@ describe('PlaneService', function() {
         await planeService.getById(999);
       } catch (err) {
         expect(err).to.be.instanceOf(NotFoundError);
-        expect(err.message).to.equal("plane not '999' found");
+        expect(err.message).to.equal("plane '999' not found");
       }
     });
   });

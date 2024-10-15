@@ -28,6 +28,10 @@ module.exports = {
         allowNull: false,
         type: 'VARCHAR(50)'
       },
+      data: {
+        allowNull: false,
+        type: Sequelize.JSONB
+      },
       state: {
         allowNull: false,
         type: 'VARCHAR(10)'

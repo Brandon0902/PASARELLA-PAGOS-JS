@@ -1,4 +1,4 @@
-const { Subscription, UserPaymentPlatform } = require('../models/plane')
+const { Subscription } = require('../models/plane')
 
 const create = async (entity, transaction) => {
     return await Subscription.create(entity, {transaction})

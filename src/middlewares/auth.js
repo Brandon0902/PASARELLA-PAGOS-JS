@@ -38,5 +38,5 @@ const checkAuthToken = (req, res, next) => {
 }
 
 module.exports = {
-    checkAuthToken
+    checkAuthToken,
 }
