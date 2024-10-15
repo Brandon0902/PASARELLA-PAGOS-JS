@@ -133,13 +133,11 @@ const cancelSubscription = async (subscription) => {
 }
 
 const create = async (data) => {
-    const user = data.user
+    const user = data.user;
     const plane = await PlaneService.getById(data.subscriptionRequest.plane_id);
     const subsType = await getSubscriptionType(data.subscriptionRequest.subscription_type_id);
-    const price = await getPlanePrice(plane.id, subsType.id)
-
-    // Value to create trial period
-    const hasTrialDays = await applyFreeTrial(user.id)
+    const price = await getPlanePrice(plane.id, subsType.id);
+    const hasTrialDays = await applyFreeTrial(user.id);
 
     // Get payment platform strategy
     const userData = {
@@ -230,17 +228,16 @@ const getActiveSubscription = async (userId) => {
     const plane = await PlaneService.getById(subscriptionPeriod.planeId);
     const subscriptionType = await getSubscriptionType(subscriptionPeriod.subscriptionTypeId);
 
-   
-    return {
+    return [{
         id: subscription.id,
         userId: subscription.userId,
         planeName: plane.name,
-        subscriptionType: subscriptionType.name,
+        subscriptionType: subscriptionType.code,
         startDate: subscriptionPeriod.startDate,
         endDate: subscriptionPeriod.endDate,
         renewDate: subscriptionPeriod.endDate,
         state: subscription.state
-    };
+    }];
 }
 
 const updateSubscription = async (id, data) => {

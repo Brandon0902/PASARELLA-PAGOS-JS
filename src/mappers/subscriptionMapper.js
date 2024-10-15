@@ -139,5 +139,7 @@ module.exports = {
     toSubscriptionEntity1,
     toSubscriptionPeriodEntity1,
     toNextSubscriptionPeriodEntity,
-    toSubscription
+    toSubscription,
+    calculateEndDate,
+    getPeriod,
 }

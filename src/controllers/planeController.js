@@ -3,7 +3,12 @@ const Schemas = require('../validations/schemas')
 const { BadRequestError } = require('../handlers/errors')
 
 const getAll = async (req, res, next) => {
-    return await res.json(await planeService.getAll())
+    try {
+        const planes = await planeService.getAll();
+        return res.json(planes);
+    } catch (err) {
+        next(err);
+    }
 }
 
 const isValid = (data) => {

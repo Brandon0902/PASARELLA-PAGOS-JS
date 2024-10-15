@@ -118,6 +118,5 @@ const processEvent = async (paymentPlatform, event) => {
 module.exports = {
     suspendSubscription,
     cancelSubscription,
-    subscriptionPaid,
-    processEvent
+    subscriptionPaid
 }
