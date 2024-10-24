@@ -2,6 +2,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const { errorHandler } = require('./handlers/errors')
 const logger = require('morgan');
+const cors = require('cors');
 const indexRouter = require('./routes/index'); 
 const webhooksRouter = require('./routes/webhooks');
 const app = express();
@@ -23,6 +24,15 @@ app.use(logger(logFormat));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+const corsOrigins = process.env.CORS_ORIGINS.split(',');
+
+app.use(cors({
+  origin: corsOrigins,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true, // Para permitir cookies u otros headers de autenticación
+  optionsSuccessStatus: 200
+}));
 
 
 app.use('/', indexRouter);
