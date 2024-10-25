@@ -1,0 +1,20 @@
+#appspec.yml
+#Main configuration file for AWS CodeDeploy
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /opt/pm2/pasarela
+permissions:
+  - object: /
+    pattern: "**"
+    owner: pm2
+    group: pm2
+hooks:
+  ApplicationStop:
+    - location: deploy-scripts/application-stop.sh
+      runas: root
+  ApplicationStart:
+    - location: deploy-scripts/application-start.sh
+runas: root
+file_exists_behavior: OVERWRITE
