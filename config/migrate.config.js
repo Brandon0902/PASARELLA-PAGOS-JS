@@ -8,6 +8,13 @@ module.exports = {
     "host": "127.0.0.1",
     "dialect": "postgresql"
   },
+  "staging": {
+    "username": process.env.POSTGRESQL_USERNAME,
+    "password": process.env.POSTGRESQL_PASSWORD,
+    "database": process.env.POSTGRESQL_DATABASE,
+    "host": process.env.DB_HOST,
+    "dialect": "postgresql"
+  },
   "test": {
     "username": "root",
     "password": null,
