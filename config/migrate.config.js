@@ -13,7 +13,14 @@ module.exports = {
     "password": process.env.POSTGRESQL_PASSWORD,
     "database": process.env.POSTGRESQL_DATABASE,
     "host": process.env.DB_HOST,
-    "dialect": "postgresql"
+    "dialect": "postgresql",
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": true,
+        "ca": fs.readFileSync('./src/certs/us-east-1-bundle.pem').toString(),
+      }
+    }
   },
   "test": {
     "username": "root",
