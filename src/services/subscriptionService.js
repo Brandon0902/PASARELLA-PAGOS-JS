@@ -23,7 +23,6 @@ const saveSubscription = async (plane, subsType, price, user, result, hasTrialDa
     const t = await sequelize.transaction()
 
     try {
-        
         const subscription = Mapper.toSubscriptionEntity(user.id, result, hasTrialDays)
         const subscriptionCreated = await SubscriptionRepository.create(subscription, t)
 
@@ -33,7 +32,7 @@ const saveSubscription = async (plane, subsType, price, user, result, hasTrialDa
 
         subscriptionCreated.lastPeriod = period
 
-        await UserPaymentPlatformRepository.create(Mapper.toUserPaymentPlatformEntity(1, user, result), t)
+        await UserPaymentPlatformRepository.create(Mapper.toUserPaymentPlatformEntity(result.id, user, result), t)
 
         await t.commit()
 
