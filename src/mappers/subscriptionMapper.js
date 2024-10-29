@@ -2,14 +2,15 @@ const moment = require('moment')
 const { NotFoundError } = require('../handlers/errors')
 
 const toSubscriptionEntity = (userId, paymentData, hasTrialDays) => {
+    const paymentMethodId = 1;
     return {
         userId: userId,
-        paymentMethodId: 1,
+        paymentMethodId: paymentMethodId,
         paymentPlatformId: paymentData.id,
         referenceId: paymentData.subscriptionId,
         hasTrialDays: hasTrialDays,
         state: hasTrialDays ? 'ACTIVE' : 'PENDING'
-    }
+    };
 }
 
 const calculateEndDate = (subscriptionType, hasTrialDays, plane, startDate) => {
