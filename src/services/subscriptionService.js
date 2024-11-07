@@ -158,15 +158,12 @@ const create = async (data) => {
 const cancel = async (data) => {
     const { id, user } = data;
 
-    // Obtener la suscripción por ID y verificar que existe
     const subscription = await getSubscription(id, user.id);
 
     if (!subscription) {
-        // Lanza un error si la suscripción no existe
         throw new NotFoundError('Subscription not found');
     }
 
-    // Cancela la suscripción y actualiza el período de suscripción
     return await cancelSubscription(subscription);
 }
 
