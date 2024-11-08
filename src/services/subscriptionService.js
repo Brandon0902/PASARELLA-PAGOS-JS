@@ -109,26 +109,23 @@ const executeTransaction = async (func, data) => {
 }
 
 const cancelSubscription = async (subscription) => {
-
     return executeTransaction(async (subscription, t) => {
+        const { id } = subscription;
 
-        const { id } = subscription
+        const subscriptionData = Mapper.toCancelSubscriptionEntity();
+        const [_, [updated]] = await SubscriptionRepository.update(id, subscriptionData, t);
 
-        const subscriptionData = Mapper.toCancelSubscriptionEntity()
-        const [ _, [updated]] = await SubscriptionRepository.update(id, subscriptionData, t)
+        const periodData = Mapper.toEndedSubscriptionPeriodEntity();
+        await updateCurrentSubscriptionPeriod(id, periodData, t);
 
-        const periodData = Mapper.toEndedSubscriptionPeriodEntity()
-        await updateCurrentSubscriptionPeriod(id, periodData, t)
+        const isCanceled = await PaymentPlatformService.cancelSubscription(subscription);
 
-        // Cancel subscription on payment platform
-        const isCanceled = await PaymentPlatformService.cancelSubscription(subscription)
-
-        if(!isCanceled) {
-            throw new InternalServerError('error to trying cancel subscription. Retry later')
+        if (!isCanceled) {
+            throw new InternalServerError('Error trying to cancel subscription. Please retry later');
         }
 
-        return updated
-    }, subscription)
+        return updated;
+    }, subscription);
 }
 
 const create = async (data) => {
@@ -159,14 +156,15 @@ const create = async (data) => {
 }
 
 const cancel = async (data) => {
-    const { id, user } = data
+    const { id, user } = data;
 
-    // Get subscription by id and user id. Only cancel if user subscription
+    const subscription = await getSubscription(id, user.id);
 
-    const subscription = await getSubscription(id, user.id)
+    if (!subscription) {
+        throw new NotFoundError('Subscription not found');
+    }
 
-    // Finish subscription and subscription period
-    return await cancelSubscription(subscription)
+    return await cancelSubscription(subscription);
 }
 
 const getByReferenceId = async (paymentPlatformId, referenceId) => {
