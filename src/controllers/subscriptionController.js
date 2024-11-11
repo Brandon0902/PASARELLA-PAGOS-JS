@@ -14,14 +14,18 @@ const create = async (req, res, next) => {
     const subscriptionRequest = req.body;
 
     try {
-        isValid(subscriptionRequest);
-        const user = req.user;
-        const result = await SubscriptionService.create({ user, subscriptionRequest });
-        return res.status(201).json({
-            success: true,
-            data: result,
-        });
+        if (isValid(subscriptionRequest)) {
+            const user = req.user;
+            const result = await SubscriptionService.create({ user, subscriptionRequest });
+            return res.status(201).json({
+                success: true,
+                data: result,
+            });
+        } else {
+            return res.status(400).send({ error: 'Bad request' });
+        }
     } catch (err) {
+        console.error(err);
         if (err instanceof BadRequestError) {
             return res.status(400).json({
                 success: false,
@@ -30,7 +34,7 @@ const create = async (req, res, next) => {
         }
         next(err);
     }
-};
+}
 
 const cancel = async (req, res, next) => {
     try {
