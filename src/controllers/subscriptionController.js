@@ -4,29 +4,33 @@ const { BadRequestError } = require('../handlers/errors')
 
 const isValid = (data) => {
     const result = subscriptionSchema.subscription.validate(data);
-    
     if (result.error) {
-        throw new BadRequestError(result.error.message)
+        throw new BadRequestError(result.error.message);
     }
-    
-    return result.error === undefined;
-}
+    return true;
+};
 
 const create = async (req, res, next) => {
-    const subscriptionRequest = req.body
-    
+    const subscriptionRequest = req.body;
+
     try {
-        if (isValid(subscriptionRequest)) {
-            const user = req.user
-            return res.status(200).send(await SubscriptionService.create({user, subscriptionRequest}))
-        } else {
-            res.status(400).send({error: 'bad request'})
-        }
+        isValid(subscriptionRequest);
+        const user = req.user;
+        const result = await SubscriptionService.create({ user, subscriptionRequest });
+        return res.status(201).json({
+            success: true,
+            data: result,
+        });
     } catch (err) {
-        console.log(err)
-        next(err)
+        if (err instanceof BadRequestError) {
+            return res.status(400).json({
+                success: false,
+                message: err.message,
+            });
+        }
+        next(err);
     }
-}
+};
 
 const cancel = async (req, res, next) => {
     try {
