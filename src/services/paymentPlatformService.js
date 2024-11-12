@@ -1,19 +1,18 @@
 const { PaymentPlatform, PlanePaymentPlatform } = require('../models/plane');
 const conektaService = require('./conektaService');
-const { NotFoundError, InternalServerError } = require('../handlers/errors');
+const { NotFoundError, InternalServerError, BadRequestError } = require('../handlers/errors');
 
 const getStrategy = (paymentPlatformName) => {
-    
     const strategies = {
         'CONEKTA': conektaService,
-        'STRIPE': { createSubscription: async () => {}, cancelSubscription: async () => {}}
-    }
+        'STRIPE': { createSubscription: async () => {}, cancelSubscription: async () => {} }
+    };
 
-    return strategies[paymentPlatformName]
+    return strategies[paymentPlatformName];
 }
 
 async function processPaymentPlatforms(customerData, paymentType) {
-    const { planeId, subscriptionTypeId } = customerData; 
+    const { planeId, subscriptionTypeId } = customerData;
 
     try {
         const paymentPlatforms = await PlanePaymentPlatform.findAll({
@@ -28,7 +27,7 @@ async function processPaymentPlatforms(customerData, paymentType) {
         });
 
         if (paymentPlatforms.length === 0) {
-            throw new NotFoundError('Error al procesar las plataformas de pago');
+            throw new NotFoundError('No se encontraron plataformas de pago para este plan.');
         }
 
         for (let platform of paymentPlatforms) {
@@ -39,40 +38,40 @@ async function processPaymentPlatforms(customerData, paymentType) {
 
             try {
                 const { customerId, subscriptionId } = await paymentStrategy.createSubscription(customerData, referenceId, paymentType);
-                console.log('Integración con Conekta completada.');
-
+                
                 return {
                     customerId,
                     subscriptionId,
                     id: paymentPlatformId
                 };
             } catch (error) {
-                console.error('Error en la integración con Conekta:', error.message);
-                throw new InternalServerError('No se pudo completar la suscripción con la plataforma de pago Conekta');
+                if (paymentPlatform.name === 'CONEKTA' && error.details && Array.isArray(error.details)) {
+                    throw new BadRequestError(error.details[0]?.message, error.details);
+                }
+
+                throw new InternalServerError(`Error en la plataforma ${paymentPlatform.name}: ${error.message}`);
             }
         }
-
     } catch (error) {
+        console.error('Error en el procesamiento de plataformas de pago:', error.message);
         throw error;
     }
 }
 
 const cancelSubscription = async (subscription) => {
     try {
+        const referenceData = subscription.referenceData;
+        const paymentStrategy = getStrategy(subscription.paymentPlatformName);
 
-        const referenceData = subscription.referenceData
-
-        const paymentStrategy = getStrategy(subscription.paymentPlatformName)
-
-        const result = await paymentStrategy.cancelSusbcription(referenceData)
-        return result !== null
-    } catch(err) {
-        console.log(err)
-        return false
+        const result = await paymentStrategy.cancelSubscription(referenceData);
+        return result !== null;
+    } catch (err) {
+        console.error('Error al cancelar la suscripción:', err.message);
+        return false;
     }
 }
 
-module.exports = { 
+module.exports = {
     processPaymentPlatforms,
     cancelSubscription
-};
+}

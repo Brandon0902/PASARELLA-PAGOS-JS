@@ -22,6 +22,22 @@ async function createSubscription(customerData, planId, paymentType) {
             subscriptionId: response.data.subscription.id
         };
     } catch (error) {
+        if (error.response && error.response.data && error.response.data.details) {
+            const conektaErrorDetails = error.response.data.details.map(detail => ({
+                message: detail.message,
+                param: detail.param,
+                code: detail.code
+            }));
+
+            console.error('Error de Conekta:', conektaErrorDetails);
+
+            const conektaError = new Error('Error en la plataforma Conekta');
+            conektaError.details = conektaErrorDetails;
+            conektaError.status = 422; 
+
+            throw conektaError;
+        }
+
         console.error('Error al crear cliente y suscripción:', error.response ? error.response.data : error.message);
         throw error;
     }
