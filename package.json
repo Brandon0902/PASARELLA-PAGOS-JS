@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "start": "nodemon src/app.js",
-    "test": "mocha 'test/**/*.test.js'"
+    "test": "mocha 'test/**/*.test.js'",
+    "db:migrate": "sequelize db:migrate",
+    "db:seed": "sequelize db:seed:all"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.3",
