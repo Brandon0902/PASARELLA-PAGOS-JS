@@ -43,9 +43,9 @@ async function createSubscription(customerData, planId, paymentType) {
     }
 }
 
-const cancelSusbcription = async (subscription) => {
+const cancelSubscription = async (subscription) => {
     const { customerId } = subscription;
     return await conektaClient.post(`/customers/${customerId}/subscription/cancel`);
 }
 
-module.exports = { createSubscription, cancelSusbcription };
+module.exports = { createSubscription, cancelSubscription };
