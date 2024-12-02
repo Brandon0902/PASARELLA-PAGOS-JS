@@ -1,3 +1,10 @@
 .env
 node_modules
 .tmp
+deploy-scripts
+docker-compose.yml
+Dockerfile
+coverage
+data
+seeders
+.nyc_output
